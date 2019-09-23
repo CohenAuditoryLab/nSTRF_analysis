@@ -84,11 +84,37 @@ function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clus
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusTwoNo1,clusTwoWo1,clusTwoPP,MdB,ModType,Sound,SModType);
 
-    % Compute nSTRF using different bin sizes
-    %   Currently only calculating nSTRF for specified time_window
-    [nSTRF]=findOverlap(spike_clusters, cluster1, cluster2, time_window);
+    % Find overlap spike times using findOverlap.m
+    [overlap]=findOverlap(spike_clusters, cluster1, cluster2, time_window);
+    % Compute nSTRF of overlap spike time
+    s_bin=0.15;
+    T1=0;
+    T2=s_bin;
+    Fss=24414.0625;
+    overlap = double(overlap)/1000.0; % convert spike times from ms to sec
+    spetOverlap=overlap * Fss;
+    SPL=80;
+    MdB=30;
+    ModType='dB';
+    Sound='MR';
+    NBlocks=100;
+    UF=10;
+    sprtype='float';
+    try
+        [taxis,faxis,nSTRF1A,nSTRF2A,nPP,nWo1A,nWo2A,nNo1A,nNo2A,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+        [taxis,faxis,nSTRF1B,nSTRF2B,nPP,nWo1B,nWo2B,nNo1B,n2B,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+    catch me
+        disp('Error when computing STRF of overlap spike time, exiting function')
+        disp(me);
+        return;
+    end
+    % Average STRF1 from TrigA and TrigB for overlap spike times
+    %   Ignoring STRF2 for now
+    nSTRF = (nSTRF1A+nSTRF1B)/2;
+    nNo1 = nNo1A + nNo1B;
+    nWo1 = (nWo1A + nWo1B)/2;
     assignin('base', 'nSTRF', nSTRF);
-
+    
     % Compute from OR/AND STRF from STRF1, STRF2
     orSTRF = clusOneSTRF1s | clusTwoSTRF1s;
     andSTRF = clusOneSTRF1s & clusTwoSTRF1s;
@@ -96,18 +122,16 @@ function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clus
     andSTRF = double(andSTRF);
     assignin('base', 'orSTRF', orSTRF);
     assignin('base', 'andSTRF', andSTRF);
-%     O = any(orSTRF(:) > 0);
-%     A = any(andSTRF(:) > 0);
-%     assignin('base', 'O', O);
-%     assignin('base', 'A', A);
     
-    % Compute xCorr btw OR/nSTRF and AND/nSTRF
-    nCorrOr = xcorr2(nSTRF, orSTRF);
-    nCorrAnd = xcorr2(nSTRF, andSTRF);
-    assignin('base', 'nCorrOR', nCorrOr);
-    assignin('base', 'nCorrAND', nCorrAnd); 
-%     oCorr = any(nCorrOr(:) > 0);
-%     aCorr = any(nCorrAnd(:) > 0);
-%     assignin('base', 'oCorr', oCorr);
-%     assignin('base', 'aCorr', aCorr);
+    % Compute significant nSTRF
+    [nSTRF1s,nTresh1]=wstrfstat(nSTRF,p,nNo1,nWo1,nPP,MdB,ModType,Sound,SModType);
+    assignin('base', 'nSTRF1s', nSTRF1s);
+    
+    % Compute correlation btw OR/nSTRF and AND/nSTRF
+    nCorrOr = nSTRF1s | orSTRF;
+    nCorrAnd = nSTRF1s & orSTRF;
+    nCorrOr = double(nCorrOr);
+    nCorrAnd = double(nCorrAnd);
+    assignin('base', 'nCorrOr', nCorrOr);
+    assignin('base', 'nCorrAnd', nCorrAnd);
 end
