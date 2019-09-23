@@ -1,13 +1,13 @@
-%function findOverlap(spikes, cluster1, cluster2, time_window)
+%function [overlap]=findOverlap(spikes, cluster1, cluster2, time_window)
 %
 %   FILE NAME   : findOverlap.m
 %   DESCRIPTION : overlap spike times from 2 clusters of spike trains
 %
 %INPUT PARAMS
-%   spikes      : full path to cluster.mat variable file containing all spikes
-%   cluster1    : index of first cluster to get spike series from
-%   cluster2    : index of second cluster to get spike series from
-%   time_window : fixed time window to chunk spikes with
+%   spikeClusters   : full path to cluster.mat variable file containing all spikes
+%   cluster1        : index of first cluster to get spike series from
+%   cluster2        : index of second cluster to get spike series from
+%   time_window     : fixed time window to chunk spikes with
 %
 %RETURNED VARIABLES
 %
@@ -22,7 +22,9 @@
 %   elements in array represent the middle of the time window with overlap)
 %   eg: 255375 in the array means both clusters spiked between the
 %   window of 255250 and 255500)
-function findOverlap(spikeClusters, cluster1, cluster2, time_window)
+
+function [overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
+
     spikeTimeRipClusStruct = load(spikeClusters);
     spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
     spike1 = spikeTimeRipClus{cluster1, 2};
@@ -53,5 +55,5 @@ function findOverlap(spikeClusters, cluster1, cluster2, time_window)
     
     % shrink array to contain only nonzero numbers, save to workspace
     overlap = overlap(overlap ~= 0);
-    assignin('base', 'overlap', overlap);
+    % assignin('base', 'overlap', overlap);
 end
