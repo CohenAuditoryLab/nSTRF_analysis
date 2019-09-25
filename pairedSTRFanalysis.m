@@ -1,4 +1,4 @@
-%function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
+% function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
 %
 %   FILE NAME   : pairedSTRFanalysis.m
 %   DESCRIPTION : This file computes the significant STRF of spike times
@@ -7,7 +7,7 @@
 %   the cross correlation btw the OR/nSTRF and AND/nSTRF
 %   
 %
-%INPUT PARAMS
+% INPUT PARAMS
 %   spike_clusters  : full path to cluster.mat variable file containing all spikes
 %   cluster1        : index of first cluster to get spike series from
 %   cluster2        : index of second cluster to get spike series from
@@ -15,7 +15,9 @@
 %   sprfile         : full path to spectral profile file
 %   Trig            : full path to trigger data
 %
-%RETURNED VARIABLES
+% RETURNED VARIABLES
+%   clusOneSTRF     : STRF of cluster 1 spike time
+%   clusTwoSTRF     : STRF of cluster 2 spike time
 %   nSTRF           : nSTRF between 2 specified spike clusters
 %   orSTRF          : orSTRF btw the 2 sig STRF of specified clusters
 %   andSTRF         : andSTRF btw the 2 sig STRF of specified clusters  
@@ -32,13 +34,12 @@
 % Trig_190326='/Users/shannon1/Documents/F19/neuroResearch/Cassius-190326/AudiResp_16_24-190326-154559_triggers.mat'
 % Trig_190324='/Users/shannon1/Documents/F19/neuroResearch/Cassius-190324/AudiResp_24_24-190324-175634_triggers.mat'
 
-function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
+% why no plots when cluster1=68, cluster2=70, window=200?
+function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
 
     % Load spike times at index cluster1 and cluster2 in spike_clusters
-    spikeTimeRipClusStruct = load(spike_clusters);
-    spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
-    spike1 = spikeTimeRipClus{cluster1, 2};
-    spike2 = spikeTimeRipClus{cluster2, 2};
+    % along with overlap spike
+    [spikeTimeRipClus, spike1, spike2, overlap] = findOverlap(spike_clusters, cluster1, cluster2, time_window);
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;
@@ -60,38 +61,43 @@ function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clus
     UF=10;
     sprtype='float';
     try
-        [taxis,faxis,clusOneSTRF1A,clusOneSTRF2A,clusOnePP,clusOneWo1A,clusOneWo2A,clusOneNo1A,clusOneNo2A,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-        [taxis,faxis,clusOneSTRF1B,clusOneSTRF2B,clusOnePP,clusOneWo1B,clusOneWo2B,clusOneNo1B,clusOneNo2B,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
-        [taxis,faxis,clusTwoSTRF1A,clusTwoSTRF2A,clusTwoPP,clusTwoWo1A,clusTwoWo2A,clusTwoNo1A,clusTwoNo2A,clusTwoSPLN]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-        [taxis,faxis,clusTwoSTRF1B,clusTwoSTRF2B,clusTwoPP,clusTwoWo1B,clusTwoWo2B,clusTwoNo1B,clusTwoNo2B,clusTwoSPLN]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+        [oneTaxis,oneFaxis,clusOneSTRF1A,clusOneSTRF2A,clusOnePP,clusOneWo1A,clusOneWo2A,clusOneNo1A,clusOneNo2A,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+        [oneTaxis,oneFaxis,clusOneSTRF1B,clusOneSTRF2B,clusOnePP,clusOneWo1B,clusOneWo2B,clusOneNo1B,clusOneNo2B,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+        [twoTaxis,twoFaxis,clusTwoSTRF1A,clusTwoSTRF2A,clusTwoPP,clusTwoWo1A,clusTwoWo2A,clusTwoNo1A,clusTwoNo2A,clusTwoSPLN]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+        [twoTaxis,twoFaxis,clusTwoSTRF1B,clusTwoSTRF2B,clusTwoPP,clusTwoWo1B,clusTwoWo2B,clusTwoNo1B,clusTwoNo2B,clusTwoSPLN]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
     catch me
-        disp('Error when computing STRF1, exiting function')
+        disp('Error when computing STRF1/STRF2 of individual clusters, exiting function')
         disp(me);
         return;
     end
     % Average STRF1 from TrigA and TrigB for both clusters
-    %   Ignoring STRF2 for now
     clusOneSTRF = (clusOneSTRF1A+clusOneSTRF1B)/2;
     clusOneNo1 = clusOneNo1A + clusOneNo1B;
     clusOneWo1 = (clusOneWo1A + clusOneWo1B)/2;
     clusTwoSTRF = (clusTwoSTRF1A+clusTwoSTRF1B)/2;
     clusTwoNo1 = clusTwoNo1A + clusTwoNo1B;
     clusTwoWo1 = (clusTwoWo1A + clusTwoWo1B)/2;
-   
+    assignin('base', 'clusOneSTRF', clusOneSTRF);
+    assignin('base', 'clusTwoSTRF', clusTwoSTRF);
+    
     % Compute significant STRF of each cluster (mark 1 as sig, 0 as not)
     p=0.001;
     SModType='dB';
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusTwoNo1,clusTwoWo1,clusTwoPP,MdB,ModType,Sound,SModType);
-
-    % Find overlap spike times using findOverlap.m
-    [overlap]=findOverlap(spike_clusters, cluster1, cluster2, time_window);
+    assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
+    assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
+    
     % Compute nSTRF of overlap spike time
+    if (isempty(overlap))
+        disp('No overlap spike time between spike1 and spike2 so nSTRF cannot be calculated, exiting function')
+        return;
+    end
     s_bin=0.15;
     T1=0;
     T2=s_bin;
     Fss=24414.0625;
-    overlap = double(overlap)/1000.0; % convert spike times from ms to sec
+    overlap = double(overlap)/1000.0; % convert spike times ms to sec
     spetOverlap=overlap * Fss;
     SPL=80;
     MdB=30;
@@ -101,15 +107,16 @@ function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clus
     UF=10;
     sprtype='float';
     try
-        [taxis,faxis,nSTRF1A,nSTRF2A,nPP,nWo1A,nWo2A,nNo1A,nNo2A,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-        [taxis,faxis,nSTRF1B,nSTRF2B,nPP,nWo1B,nWo2B,nNo1B,n2B,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+        [nTaxis,nFaxis,nSTRF1A,nSTRF2A,nPP,nWo1A,nWo2A,nNo1A,nNo2A,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+        [nTaxis,nFaxis,nSTRF1B,nSTRF2B,nPP,nWo1B,nWo2B,nNo1B,n2B,nSPLN]=rtwstrfdbint(sprfile,T1,T2,spetOverlap',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
     catch me
-        disp('Error when computing STRF of overlap spike time, exiting function')
+        disp('Error when computing STRF of overlap spike time (nSTRF), exiting function')
         disp(me);
         return;
     end
+   
     % Average STRF1 from TrigA and TrigB for overlap spike times
-    %   Ignoring STRF2 for now
+    % FOLLOW UP: Why is result of line 112 being printed??
     nSTRF = (nSTRF1A+nSTRF1B)/2;
     nNo1 = nNo1A + nNo1B;
     nWo1 = (nWo1A + nWo1B)/2;
@@ -134,4 +141,29 @@ function [nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clus
     nCorrAnd = double(nCorrAnd);
     assignin('base', 'nCorrOr', nCorrOr);
     assignin('base', 'nCorrAnd', nCorrAnd);
+    
+    subplot(1,5,1)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('STRF1');
+    subplot(1,5,2)
+    pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('STRF2');
+    subplot(1,5,3)
+    pcolor(nTaxis,log2(nFaxis/nFaxis(1)),nSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('nSTRF');
+    subplot(1,5,4)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),orSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('orSTRF');
+    subplot(1,5,5)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),andSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('andSTRF');
+
+    % close all opened files
+    fclose all;
 end
+

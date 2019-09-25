@@ -1,17 +1,20 @@
-%function [overlap]=findOverlap(spikes, cluster1, cluster2, time_window)
+% function [overlap]=findOverlap(spikes, cluster1, cluster2, time_window)
 %
 %   FILE NAME   : findOverlap.m
 %   DESCRIPTION : overlap spike times from 2 clusters of spike trains
 %
-%INPUT PARAMS
+% INPUT PARAMS
 %   spikeClusters   : full path to cluster.mat variable file containing all spikes
 %   cluster1        : index of first cluster to get spike series from
 %   cluster2        : index of second cluster to get spike series from
 %   time_window     : fixed time window to chunk spikes with
 %
-%RETURNED VARIABLES
+% RETURNED VARIABLES
 %
-%   overlap     : mxn double array that contains overlap times of spikes
+%   spikeTimeRipClus    : mx2 cell that holds cluster spike times 
+%   spike1              : spike time at specified index cluster 1
+%   spike2              : spike time at specified index cluster 2
+%   overlap             : mxn double array that contains overlap times of spikes
 %
 % (C) Shannon Lin, Edited Sept 2019
 %
@@ -23,12 +26,19 @@
 %   eg: 255375 in the array means both clusters spiked between the
 %   window of 255250 and 255500)
 
-function [overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
+function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
 
     spikeTimeRipClusStruct = load(spikeClusters);
     spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
+    assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
+    [maxIndex, ~] = size(spikeTimeRipClus);
+    if (cluster1 > maxIndex || cluster2 > maxIndex)
+        disp('Please input cluster indices within valid range (1:num rows in spikeTimeRipClus)');
+    end
     spike1 = spikeTimeRipClus{cluster1, 2};
     spike2 = spikeTimeRipClus{cluster2, 2};
+    assignin('base', 'spike1', spike1);
+    assignin('base', 'spike2', spike2);
     
     % find total number of time_window chunks to loop through
     max1 = max(spike1);
@@ -55,5 +65,5 @@ function [overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
     
     % shrink array to contain only nonzero numbers, save to workspace
     overlap = overlap(overlap ~= 0);
-    % assignin('base', 'overlap', overlap);
+    assignin('base', 'overlap', overlap);
 end
