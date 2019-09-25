@@ -29,7 +29,7 @@
 function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
 
     spikeTimeRipClusStruct = load(spikeClusters);
-    spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
+    spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
     assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
     [maxIndex, ~] = size(spikeTimeRipClus);
     if (cluster1 > maxIndex || cluster2 > maxIndex)
@@ -65,5 +65,6 @@ function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, 
     
     % shrink array to contain only nonzero numbers, save to workspace
     overlap = overlap(overlap ~= 0);
+    overlap = double(overlap)/1000.0;
     assignin('base', 'overlap', overlap);
 end
