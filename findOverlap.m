@@ -26,10 +26,16 @@
 %   eg: 255375 in the array means both clusters spiked between the
 %   window of 255250 and 255500)
 
-function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window)
-
+function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window, version)
     spikeTimeRipClusStruct = load(spikeClusters);
-    spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
+    if (version == 'old')
+        spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
+    elseif (version == 'new')
+        spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
+    else
+        disp('Invalid version name, please input "old" or "new"')
+        return;
+    end
     assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
     [maxIndex, ~] = size(spikeTimeRipClus);
     if (cluster1 > maxIndex || cluster2 > maxIndex)
@@ -65,6 +71,5 @@ function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, 
     
     % shrink array to contain only nonzero numbers, save to workspace
     overlap = overlap(overlap ~= 0);
-    overlap = double(overlap)/1000.0;
     assignin('base', 'overlap', overlap);
 end
