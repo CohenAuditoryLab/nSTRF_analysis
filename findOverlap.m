@@ -5,44 +5,48 @@
 %
 % INPUT PARAMS
 %   spikeClusters   : full path to cluster.mat variable file containing all spikes
-%   cluster1        : index of first cluster to get spike series from
-%   cluster2        : index of second cluster to get spike series from
+%   cluster1        : first cluster to get spike series from
+%   cluster2        : second cluster to get spike series from
 %   time_window     : fixed time window to chunk spikes with
+%   version         : 'st_clu' or 'spikeTimeRip', refers to what struct exists in
+%                       spike_clusters
 %
 % RETURNED VARIABLES
 %
 %   spikeTimeRipClus    : mx2 cell that holds cluster spike times 
-%   spike1              : spike time at specified index cluster 1
-%   spike2              : spike time at specified index cluster 2
+%   spike1              : spike time at specified cluster 1
+%   spike2              : spike time at specified cluster 2
 %   overlap             : mxn double array that contains overlap times of spikes
 %
 % (C) Shannon Lin, Edited Sept 2019
 %
 % EXAMPLE
 % If I ran the script as such:
-%   findOverlap('/Users/shannon1/Documents/F19/neuroResearch/Cassius-190326/spike_times_ripple_clust.mat', 1, 2, 250)
+%   findOverlap('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 6, 9, 250, 'st_clu')
 % I would be returned with an array of overlap spike times (individual
 %   elements in array represent the middle of the time window with overlap)
 %   eg: 255375 in the array means both clusters spiked between the
 %   window of 255250 and 255500)
 
-function [spikeTimeRipClus, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window, version)
+function [allSpikeTimes, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window, version)
     spikeTimeRipClusStruct = load(spikeClusters);
-    if (version == 'old')
-        spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
-    elseif (version == 'new')
-        spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
+    if (strcmp(version, 'spikeTimeRip'))
+        allSpikeTimes = spikeTimeRipClusStruct.spikeTimeRipClus;
+    elseif (strcmp(version, 'st_clu'))
+        allSpikeTimes = spikeTimeRipClusStruct.st_clu;
     else
-        disp('Invalid version name, please input "old" or "new"')
+        disp('Invalid version name, please input "st_clu" or "spikeTimeRip"')
         return;
     end
-    assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
-    [maxIndex, ~] = size(spikeTimeRipClus);
-    if (cluster1 > maxIndex || cluster2 > maxIndex)
-        disp('Please input cluster indices within valid range (1:num rows in spikeTimeRipClus)');
+    assignin('base', 'spikeTimeRipClus', allSpikeTimes);
+    index1 = find(cell2mat(allSpikeTimes(:,1))==cluster1);
+    index2 = find(cell2mat(allSpikeTimes(:,1))==cluster2);
+    if (isempty(index1) || isempty(index2)) 
+        disp('Cluster number specified does not exist in data, see below for valid cluster numbers')
+        return
     end
-    spike1 = spikeTimeRipClus{cluster1, 2};
-    spike2 = spikeTimeRipClus{cluster2, 2};
+    spike1 = allSpikeTimes{index1, 2};
+    spike2 = allSpikeTimes{index2, 2};
     assignin('base', 'spike1', spike1);
     assignin('base', 'spike2', spike2);
     

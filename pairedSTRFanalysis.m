@@ -9,11 +9,13 @@
 %
 % INPUT PARAMS
 %   spike_clusters  : full path to cluster.mat variable file containing all spikes
-%   cluster1        : index of first cluster to get spike series from
-%   cluster2        : index of second cluster to get spike series from
+%   cluster1        : first cluster to get spike series from
+%   cluster2        : second cluster to get spike series from
 %   time_window     : fixed time window to chunk spikes with
 %   sprfile         : full path to spectral profile file
 %   Trig            : full path to trigger data
+%   version         : 'st_clu' or 'spikeTimeRip', refers to what struct exists in
+%                       spike_clusters
 %
 % RETURNED VARIABLES
 %   clusOneSTRF     : STRF of cluster 1 spike time
