@@ -31,9 +31,7 @@
 % Tested by running function as follows: 
 % pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 6, 9, 500, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
 
-% why no plots when cluster1=68, cluster2=70, window=200?
 function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig, version)
-    close all;
     % Load spike times at index cluster1 and cluster2 in spike_clusters
     % along with overlap spike
     [spikeTimeRipClus, spike1, spike2, overlap] = findOverlap(spike_clusters, cluster1, cluster2, time_window, version);
@@ -134,18 +132,22 @@ function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = paire
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
     title(['STRF no ' int2str(cluster1)]);
+    
     subplot(2,5,2)
     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
     title(['STRF no ' int2str(cluster2)]);
+    
     subplot(2,5,3)
     pcolor(nTaxis,log2(nFaxis/nFaxis(1)),nSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-    title(['nSTRF ' int2str(cluster1) ':' int2str(cluster2) '-' int2str(time_window)]);
+    title(['nSTRF ' int2str(cluster1) ':' int2str(cluster2) '-' num2str(double(time_window))]);
+    
     subplot(2,5,4)
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),orSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
     title('orSTRF');
+    
     subplot(2,5,5)
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),andSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
@@ -155,10 +157,22 @@ function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = paire
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),nCorrOr);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
     title('nCorrOr');
+    
     subplot(2,5,7)
     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),nCorrAnd);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
     title('nCorrAnd');
+    
+    subplot(2,5,8)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['STRF1s no ' int2str(cluster1)]);
+    
+    subplot(2,5,9)
+    pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['STRF2s no ' int2str(cluster2)]);
+    
     % close all opened files
     fclose all;
 end

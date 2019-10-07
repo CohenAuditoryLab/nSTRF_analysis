@@ -53,7 +53,7 @@ function [allSpikeTimes, spike1, spike2, overlap]=findOverlap(spikeClusters, clu
     % find total number of time_window chunks to loop through
     max1 = max(spike1);
     max2 = max(spike2);
-    if (max1 > max2) 
+    if (max1 >= max2) 
         largestTime = max1;
     else
         largestTime = max2;
@@ -64,12 +64,12 @@ function [allSpikeTimes, spike1, spike2, overlap]=findOverlap(spikeClusters, clu
     % fill in overlap array with center of time_window chunk if both
     % neurons fired within a particular time_window
     for i = 1:numIterations
-        lb = time_window*(i-1);
-        ub = time_window*i;
+        lb = time_window*(double(i)-1.0);
+        ub = time_window*double(i);
         spike1Contains = find(spike1 <= ub & spike1 >= lb);
         spike2Contains = find(spike2 <= ub & spike2 >= lb);
         if (~isempty(spike1Contains) && ~isempty(spike2Contains))
-            overlap(i) = (lb+ub)/2;
+            overlap(i) = (lb+ub)/2.0;
         end
     end
     
