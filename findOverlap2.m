@@ -4,48 +4,17 @@
 %   DESCRIPTION : overlap spike times from 2 clusters of spike trains
 %
 % INPUT PARAMS
-%   spikeClusters   : full path to cluster.mat variable file containing all spikes
-%   cluster1        : first cluster to get spike series from
-%   cluster2        : second cluster to get spike series from
-%   time_window     : fixed time window to chunk spikes with
-%   version         : 'st_clu' or 'spikeTimeRip', refers to what struct exists in
-%                       spike_clusters
+%   spike1          : first spike time series
+%   spike2          : second spike time series
+%   time_window     : optimal bin size to find coincident spike times
 %
 % RETURNED VARIABLES
-%
-%   allSpikeTimes       : mx2 cell that holds all cluster spike times  
-%   spike1              : spike time at specified cluster 1
-%   spike2              : spike time at specified cluster 2
 %   coin1               : spike1 coincident spike times with spike2
 %   coin2               : spike2 coincident spike times with spike1
 %
 % (C) Shannon Lin, Edited Oct 2019
-%
-% Tested script as follows:
-%   findOverlap2('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 6, 9, 0.005, 'st_clu')
 
-function [allSpikeTimes, spike1, spike2, coin1, coin2]=findOverlap2(spikeClusters, cluster1, cluster2, time_window, version)
-    spikeTimeRipClusStruct = load(spikeClusters);
-    if (strcmp(version, 'spikeTimeRip'))
-        allSpikeTimes = spikeTimeRipClusStruct.spikeTimeRipClus;
-    elseif (strcmp(version, 'st_clu'))
-        allSpikeTimes = spikeTimeRipClusStruct.st_clu;
-    else
-        disp('Invalid version name, please input "st_clu" or "spikeTimeRip"')
-        return;
-    end
-    assignin('base', 'spikeTimeRipClus', allSpikeTimes);
-    index1 = find(cell2mat(allSpikeTimes(:,1))==cluster1);
-    index2 = find(cell2mat(allSpikeTimes(:,1))==cluster2);
-    if (isempty(index1) || isempty(index2)) 
-        disp('Cluster number specified does not exist in data, see below for valid cluster numbers')
-        return
-    end
-    spike1 = allSpikeTimes{index1, 2};
-    spike2 = allSpikeTimes{index2, 2};
-    assignin('base', 'spike1', spike1);
-    assignin('base', 'spike2', spike2);
-    
+function [coin1, coin2]=findOverlap2(spike1, spike2, time_window)
     % find total number of time_window chunks to loop through
     max1 = max(spike1);
     max2 = max(spike2);
@@ -60,8 +29,7 @@ function [allSpikeTimes, spike1, spike2, coin1, coin2]=findOverlap2(spikeCluster
     coin1 = zeros(dim1, 1);
     coin2 = zeros(dim2, 1);
     
-    % fill in overlap array with center of time_window chunk if both
-    % neurons fired within a particular time_window
+    % mark respective spike times if both fired within same time window
     for i = 1:numIterations
         lb = time_window*(double(i)-1.0);
         ub = time_window*double(i);
