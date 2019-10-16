@@ -14,11 +14,10 @@
 % (C) Shannon Lin, Edited Oct 2019
 
 function [optimalBinSize] = findBin(spike1, spike2)
-    % use spike1 as reference
     [corr, lags] = xcorr(spike1, spike2);
-    assignin('base', 'corr', corr);
-    assignin('base', 'lags', lags);
-    plot(lags, corr);
+%     assignin('base', 'corr', corr);
+%     assignin('base', 'lags', lags);
+%     plot(lags, corr);
     [~, peakIndex] = max(corr);
     optimalBinSize = abs(lags(1, peakIndex) / 1e3);
 end

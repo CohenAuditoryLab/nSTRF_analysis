@@ -1,4 +1,4 @@
-% function [clusOneSTRF,clusTwoSTRF,nSTRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
+% function pairedSTRFanalysis(spike_clusters,cluster1,cluster2,time_window,sprfile,Trig)
 %
 %   FILE NAME   : pairedSTRFanalysis.m
 %   DESCRIPTION : This file computes the significant STRF of spike times
@@ -18,21 +18,15 @@
 %                       spike_clusters
 %
 % RETURNED VARIABLES
-%   clusOneSTRF     : STRF of cluster 1 spike time
-%   clusTwoSTRF     : STRF of cluster 2 spike time
-%   nSTRF           : nSTRF between 2 specified spike clusters
-%   orSTRF          : orSTRF btw the 2 sig STRF of specified clusters
-%   andSTRF         : andSTRF btw the 2 sig STRF of specified clusters  
-%   nCorrOr         : cross correlation between nSTRF/orSTRF
-%   nCorrAnd        : cross correlation between nSTRF/andSTRF
+%   N/A, though many are saved to workspace
 %
 % (C) Shannon Lin, Edited Oct 2019
 
 % Tested by running function as follows: 
 % pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 6, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
 
-function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd] = pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig, version)
-    % Load spike times at index cluster1 and cluster2 in spike_clusters
+function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig, version)
+    % Find and load spike times corresponding to cluster1 and cluster2 in spike_clusters
     spikeTimeRipClusStruct = load(spikeClusters);
     if (strcmp(version, 'spikeTimeRip'))
         allSpikeTimes = spikeTimeRipClusStruct.spikeTimeRipClus;
@@ -60,13 +54,11 @@ function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd]
     
     % Find coincident spike times for spike1 and spike2
     [coin1, coin2] = findOverlap2(spike1, spike2, time_window);
-    
-    % Load trig
+
+    % Define STRF parameters
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;
-
-    % Compute STRF of each cluster
     s_bin=0.15;
     T1=0;
     T2=s_bin;
@@ -81,6 +73,7 @@ function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd]
     UF=10;
     sprtype='float';
     
+    % Compute STRF of each cluster
     try
         [oneTaxis,oneFaxis,clusOneSTRF1A,clusOneSTRF2A,clusOnePP,clusOneWo1A,clusOneWo2A,clusOneNo1A,clusOneNo2A,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
         [oneTaxis,oneFaxis,clusOneSTRF1B,clusOneSTRF2B,clusOnePP,clusOneWo1B,clusOneWo2B,clusOneNo1B,clusOneNo2B,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
@@ -92,7 +85,7 @@ function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd]
         return;
     end
     
-    % Average STRF1 from TrigA and TrigB for both clusters
+    % Average STRF1 from TrigA and TrigB for both spike trains
     clusOneSTRF = (clusOneSTRF1A+clusOneSTRF1B)/2;
     assignin('base', 'clusOneSTRF', clusOneSTRF);
     clusOneNo1 = clusOneNo1A + clusOneNo1B;
@@ -101,15 +94,15 @@ function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd]
     assignin('base', 'clusTwoSTRF', clusTwoSTRF);
     clusTwoNo1 = clusTwoNo1A + clusTwoNo1B;
     clusTwoWo1 = (clusTwoWo1A + clusTwoWo1B)/2;
-%      
-%     % Compute significant STRF of each cluster (mark 1 as sig, 0 as not)
-%     p=0.001;
-%     SModType='dB';
-%     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
-%     assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
-%     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
-%     assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
-%     
+     
+    % Compute significant STRF of each cluster
+    p=0.001;
+    SModType='dB';
+    [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
+    [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
+    
     % Compute STRF coincident spike times
     if (~(isempty(coin1) && (isempty(coin2))))
         spet1=coin1 * Fss;
@@ -129,89 +122,98 @@ function [clusOneSTRF,clusTwoSTRF,n1STRF,n2STRF,orSTRF,andSTRF,nCorrOr,nCorrAnd]
             return;
         end
         % Average STRF1 from TrigA and TrigB for coincident spike times
-        n1STRF = (n1STRF1A+n1STRF1B)/2;
-        assignin('base', 'n1STRF', n1STRF);
+        coin1STRF = (n1STRF1A+n1STRF1B)/2;
+        assignin('base', 'coin1STRF', coin1STRF);
         n1No1 = n1No1A + n1No1B;
         n1Wo1 = (n1Wo1A + n1Wo1B)/2;
         
-        n2STRF = (n2STRF1A+n2STRF1B)/2;
-        assignin('base', 'n2STRF', n2STRF);
+        coin2STRF = (n2STRF1A+n2STRF1B)/2;
+        assignin('base', 'coin2STRF', coin2STRF);
         n2No1 = n2No1A + n2No1B;
         n2Wo1 = (n2Wo1A + n2Wo1B)/2;
     end
     
-%     % Compute from OR/AND STRF from STRF1, STRF2
-%     orSTRF = clusOneSTRF1s | clusTwoSTRF1s;
-%     andSTRF = clusOneSTRF1s & clusTwoSTRF1s;
-%     orSTRF = double(orSTRF);
-%     andSTRF = double(andSTRF);
-%     assignin('base', 'orSTRF', orSTRF);
-%     assignin('base', 'andSTRF', andSTRF);
-%      
-%     % Compute significant nSTRFs
-%     [n1STRF1s,n1Tresh1]=wstrfstat(n1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
-%     assignin('base', 'n1STRF1s', n1STRF1s);
-%     [n2STRF1s,n2Tresh1]=wstrfstat(n2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
-%     assignin('base', 'n2STRF1s', n2STRF1s);
-% 
-%     % compute cross correlation between n1/2STRFs, or/and
-%     nCorrOr = xcorr2(n1STRF1s, orSTRF);
-%     nCorrAnd = xcorr2(n1STRF1s, andSTRF);
-%     assignin('base', 'nCorrOr', nCorrOr);
-%     assignin('base', 'nCorrAnd', nCorrAnd);
-%     
-    % plot STRF1, STRF2, nSTRF, orSTRF, andSTRF
-    subplot(2,5,1)
+    % Compute OR/AND STRF from STRFs
+    orSTRF = clusOneSTRF1s | clusTwoSTRF1s;
+    andSTRF = clusOneSTRF1s & clusTwoSTRF1s;
+    orSTRF = double(orSTRF);
+    andSTRF = double(andSTRF);
+    assignin('base', 'orSTRF', orSTRF);
+    assignin('base', 'andSTRF', andSTRF);
+     
+    % Compute significant coinSTRFs
+    [coin1STRF1s,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+    assignin('base', 'n1STRF1s', coin1STRF1s);
+    [coin2STRF1s,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+    assignin('base', 'n2STRF1s', coin2STRF1s);
+
+    % Compute cross correlation between n1/2STRFs, or/and
+    nCorrOr = xcorr2(coin1STRF1s, orSTRF);
+    nCorrAnd = xcorr2(coin1STRF1s, andSTRF);
+    assignin('base', 'nCorrOr', nCorrOr);
+    assignin('base', 'nCorrAnd', nCorrAnd);
+    
+    % plot STRF, STRFs, coinSTRF, coinSTRFs
+    figure();
+    subplot(3,4,1)
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-    title(['STRF no ' int2str(cluster1)]);
+    title(['#' int2str(cluster1) ' STRF']);
     
-    subplot(2,5,2)
+    subplot(3,4,2)
     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-    title(['STRF no ' int2str(cluster2)]);
+    title(['#' int2str(cluster2) ' STRF']);
     
-    subplot(2,5,3)
-    pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),n1STRF);
+    subplot(3,4,3)
+    pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-    title(['n1STRF ' int2str(cluster1) ':' int2str(cluster2) '-' num2str(double(time_window))]);
+    title(['#' int2str(cluster1) ' coinSTRF']);
     
-    subplot(2,5,4)
-    pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),n2STRF);
+    subplot(3,4,4)
+    pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF);
     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-    title(['n2STRF ' int2str(cluster1) ':' int2str(cluster2) '-' num2str(double(time_window))]);
+    title(['#' int2str(cluster2) ' coinSTRF']);
     
-%     subplot(2,5,5)
-%     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),orSTRF);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title('orSTRF');
-%     
-%     subplot(2,5,6)
-%     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),andSTRF);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title('andSTRF');
-%     
-%     subplot(2,5,7)
-%     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),nCorrOr);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title('nCorrOr');
-%     
-%     subplot(2,5,8)
-%     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),nCorrAnd);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title('nCorrAnd');
-%     
-%     subplot(2,5,9)
-%     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF1s);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title(['STRF1s no ' int2str(cluster1)]);
-%     
-%     subplot(2,5,10)
-%     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF1s);
-%     colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-%     title(['STRF2s no ' int2str(cluster2)]);
-%     
-%     % close all opened files
-%     fclose all;
+    subplot(3,4,5)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['#' int2str(cluster1) ' STRFs']);
+    
+    subplot(3,4,6)
+    pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['#' int2str(cluster2) ' STRFs']);
+    
+    subplot(3,4,7)
+    pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['#' int2str(cluster2) ' coinSTRFs']);
+    
+    subplot(3,4,8)
+    pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF1s);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title(['#' int2str(cluster2) ' coinSTRFs']);
+    
+    subplot(3,4,9)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),orSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('orSTRF');
+    
+    subplot(3,4,10)
+    pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),andSTRF);
+    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    title('andSTRF');
+    
+    subplot(3,4,11)
+    plot(nCorrOr);
+    title('nCorrOr STRF');
+    
+    subplot(3,4,12)
+    plot(nCorrAnd);
+    title('nCorrAnd STRF');
+  
+    % close all opened files
+    fclose all;
 end
 

@@ -29,7 +29,7 @@ function [coin1, coin2]=findOverlap2(spike1, spike2, time_window)
     coin1 = zeros(dim1, 1);
     coin2 = zeros(dim2, 1);
     
-    % mark respective spike times if both fired within same time window
+    % record actual spike times if both fired within same time window
     for i = 1:numIterations
         lb = time_window*(double(i)-1.0);
         ub = time_window*double(i);
