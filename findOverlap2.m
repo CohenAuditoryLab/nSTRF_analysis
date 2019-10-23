@@ -1,7 +1,8 @@
-% function [allSpikeTimes, spike1, spike2, coin1, coin2]=findOverlap2(spikeClusters, cluster1, cluster2, time_window, version)
+% function [coin1, coin2]=findOverlap2(spike1, spike2, time_window)
 %
 %   FILE NAME   : findOverlap2.m
-%   DESCRIPTION : overlap spike times from 2 clusters of spike trains
+%   DESCRIPTION : computes coincident spike times from 2 spike trains at
+%       given time_window
 %
 % INPUT PARAMS
 %   spike1          : first spike time series
@@ -15,6 +16,11 @@
 % (C) Shannon Lin, Edited Oct 2019
 
 function [coin1, coin2]=findOverlap2(spike1, spike2, time_window)
+    if isequal(spike1, spike2)
+        coin1 = spike1;
+        coin2 = spike2;
+        return;
+    end
     % find total number of time_window chunks to loop through
     max1 = max(spike1);
     max2 = max(spike2);

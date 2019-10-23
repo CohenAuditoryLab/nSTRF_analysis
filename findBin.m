@@ -1,7 +1,8 @@
-% function [allSpikeTimes, spike1, spike2, overlap]=findOverlap(spikeClusters, cluster1, cluster2, time_window, version)
+% function [optimalBinSize] = findBin(spike1, spike2)
 %
-%   FILE NAME   : findOverlap.m
-%   DESCRIPTION : overlap spike times from 2 clusters of spike trains
+%   FILE NAME   : findBin.m
+%   DESCRIPTION : finds optimal time bin size between 2 spike trains by
+%       finding at what lag the peak cross correlation occurs at
 %
 % INPUT PARAMS
 %   spike1              : first spike time series
