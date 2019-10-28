@@ -142,13 +142,13 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
      
     % Compute significant coinSTRFs
     [coin1STRF1s,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
-    assignin('base', 'n1STRF1s', coin1STRF1s);
+    assignin('base', 'coin1STRF1s', coin1STRF1s);
     [coin2STRF1s,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
-    assignin('base', 'n2STRF1s', coin2STRF1s);
+    assignin('base', 'coin2STRF1s', coin2STRF1s);
 
     % Compute cross correlation between coin1/2STRFs, OR/AND STRF
-    coin1CorrOr = xcorr2(coin1STRF1s, orSTRF);
-    coin1CorrAnd = xcorr2(coin1STRF1s, andSTRF);
+    coin1CorrOr = normxcorr2(coin1STRF1s, orSTRF);
+    coin1CorrAnd = normxcorr2(coin1STRF1s, andSTRF);
     assignin('base', 'coin1CorrOr', coin1CorrOr);
     assignin('base', 'coin1Corr', coin1CorrAnd);
     % Index of zero lag is (0+rows, 0+cols) 
@@ -168,8 +168,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     assignin('base', 'coin2CorrAndZeroLag', coin2CorrAndZeroLag);
     
     % plot STRF, STRFs, coinSTRF, coinSTRFs
-    rows = 4;
-    cols = 3;
+    rows = 6;
+    cols = 2;
     num = 1;
     figure();
     subplot(rows,cols,num)
@@ -234,23 +234,24 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     
     xAxis = 0.1;
     yAxis = 1;
+    offset = -0.3;
     corrOr1 = subplot(rows, cols, num);
-    text(xAxis, yAxis,['coin1CorrOrZeroLag: ' num2str(coin1CorrOrZeroLag)]);
-    yAxis = yAxis - 0.2;
+    text(xAxis, yAxis,['coin' int2str(cluster1) 'CorrOrZeroLag: ' num2str(coin1CorrOrZeroLag)]);
+    yAxis = yAxis + offset;
     set (corrOr1, 'visible', 'off')
     
     corrAnd1 = subplot(rows, cols, num);
-    text(xAxis, yAxis,['coin1CorrAndZeroLag: ' num2str(coin1CorrAndZeroLag)]);
-    yAxis = yAxis - 0.2;
+    text(xAxis, yAxis,['coin' int2str(cluster1) 'CorrAndZeroLag: ' num2str(coin1CorrAndZeroLag)]);
+    yAxis = yAxis + offset;
     set (corrAnd1, 'visible', 'off')
     
     corrOr2 = subplot(rows, cols, num);
-    text(xAxis, yAxis,['coin2CorrOrZeroLag: ' num2str(coin2CorrOrZeroLag)]);
-    yAxis = yAxis - 0.2;
+    text(xAxis, yAxis,['coin' int2str(cluster2) 'CorrOrZeroLag: ' num2str(coin2CorrOrZeroLag)]);
+    yAxis = yAxis + offset;
     set (corrOr2, 'visible', 'off')
     
     corrAnd2 = subplot(rows, cols, num);
-    text(xAxis, yAxis,['coin2CorrAndZeroLag: ' num2str(coin2CorrAndZeroLag)]);
+    text(xAxis, yAxis,['coin' int2str(cluster2) 'CorrAndZeroLag: ' num2str(coin2CorrAndZeroLag)]);
     set (corrAnd2, 'visible', 'off')
   
     % close all opened files
