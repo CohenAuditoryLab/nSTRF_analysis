@@ -22,7 +22,7 @@
 % (C) Shannon Lin, Edited Oct 2019
 
 % Tested by running function as follows: 
-% pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 6, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
+% pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 9, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
 
 function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version)
     % Find and load spike times corresponding to cluster1 and cluster2 in spike_clusters
@@ -47,13 +47,6 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     assignin('base', 'spike1', spike1);
     assignin('base', 'spike2', spike2);
     
-    % Find optimal bin size
-    time_window = findBin(spike1, spike2);
-    assignin('base', 'time_window', time_window);
-    
-    % Find coincident spike times for spike1 and spike2
-    [coin1, coin2] = findOverlap2(spike1, spike2, time_window);
-
     % Define STRF parameters
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
@@ -64,6 +57,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     Fss=24414.0625;
     spet1=spike1 * Fss;
     spet2=spike2 * Fss;
+    assignin('base', 'spet1', spet1);
+    assignin('base', 'spet2', spet2);
     SPL=80;
     MdB=30;
     ModType='dB';
@@ -72,6 +67,13 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     UF=10;
     sprtype='float';
     
+    % Find optimal bin size
+    optimalBinSize = findBin(Fss, spet1, spet2);
+    assignin('base', 'time_window', optimalBinSize);
+    
+    % Find coincident spike times for spike1 and spike2
+    [coin1, coin2] = findOverlap2(spike1, spike2, optimalBinSize);
+
     % Compute STRF of each cluster
     try
         [oneTaxis,oneFaxis,clusOneSTRF1A,clusOneSTRF2A,clusOnePP,clusOneWo1A,clusOneWo2A,clusOneNo1A,clusOneNo2A,clusOneSPLN]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
@@ -95,9 +97,11 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     clusTwoWo1 = (clusTwoWo1A + clusTwoWo1B)/2;
      
     % Compute significant STRF of each cluster
-    p=0.001;
+    p=0.05;
     SModType='dB';
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    % convert numbers that are > 0.05/# pixels as significant (1), else 0?
+    % wrote binarizeSTRF function to do this
     assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
     assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
@@ -132,6 +136,12 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
         n2Wo1 = (n2Wo1A + n2Wo1B)/2;
     end
     
+    % Compute significant coinSTRFs
+    [coin1STRF1s,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+    assignin('base', 'coin1STRF1s', coin1STRF1s);
+    [coin2STRF1s,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+    assignin('base', 'coin2STRF1s', coin2STRF1s);
+
     % Compute OR/AND STRF from STRFs
     orSTRF = clusOneSTRF1s | clusTwoSTRF1s;
     andSTRF = clusOneSTRF1s & clusTwoSTRF1s;
@@ -139,13 +149,7 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     andSTRF = double(andSTRF);
     assignin('base', 'orSTRF', orSTRF);
     assignin('base', 'andSTRF', andSTRF);
-     
-    % Compute significant coinSTRFs
-    [coin1STRF1s,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
-    assignin('base', 'coin1STRF1s', coin1STRF1s);
-    [coin2STRF1s,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
-    assignin('base', 'coin2STRF1s', coin2STRF1s);
-
+    
     % Compute cross correlation between coin1/2STRFs, OR/AND STRF
     coin1CorrOr = normxcorr2(coin1STRF1s, orSTRF);
     coin1CorrAnd = normxcorr2(coin1STRF1s, andSTRF);
@@ -158,8 +162,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     coin1CorrAndZeroLag = coin1CorrAnd(zeroLagRowIndex, zeroLagColIndex);
     assignin('base', 'coin1CorrOrZeroLag', coin1CorrOrZeroLag);
     assignin('base', 'coin1CorrAndZeroLag', coin1CorrAndZeroLag);
-    coin2CorrOr = xcorr2(coin2STRF1s, orSTRF);
-    coin2CorrAnd = xcorr2(coin2STRF1s, andSTRF);
+    coin2CorrOr = normxcorr2(coin2STRF1s, orSTRF);
+    coin2CorrAnd = normxcorr2(coin2STRF1s, andSTRF);
     assignin('base', 'coin2CorrOr', coin2CorrOr);
     assignin('base', 'coin2Corr', coin2CorrAnd);
     coin2CorrOrZeroLag = coin2CorrOr(zeroLagRowIndex, zeroLagColIndex);
