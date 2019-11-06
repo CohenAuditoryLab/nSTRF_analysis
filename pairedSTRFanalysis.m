@@ -17,9 +17,9 @@
 %                       spikeClusters
 %
 % RETURNED VARIABLES
-%   N/A, though many are saved to workspace
+%   N/A, data saved to workspace
 %
-% (C) Shannon Lin, Edited Oct 2019
+% (C) Shannon Lin, Edited Nov 2019
 
 % Tested by running function as follows: 
 % pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 9, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
@@ -100,10 +100,10 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     p=0.05;
     SModType='dB';
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
-    % convert numbers that are > 0.05/# pixels as significant (1), else 0?
-    % wrote binarizeSTRF function to do this
+    clusOneSTRF1s = binarizeSTRFs(clusOneSTRF1s);
     assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    clusTwoSTRF1s = binarizeSTRFs(clusTwoSTRF1s);
     assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
     
     % Compute STRF coincident spike times
@@ -138,8 +138,10 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     
     % Compute significant coinSTRFs
     [coin1STRF1s,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+    coin1STRF1s = binarizeSTRFs(coin1STRF1s);
     assignin('base', 'coin1STRF1s', coin1STRF1s);
     [coin2STRF1s,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+    coin2STRF1s = binarizeSTRFs(coin2STRF1s);
     assignin('base', 'coin2STRF1s', coin2STRF1s);
 
     % Compute OR/AND STRF from STRFs
@@ -151,8 +153,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     assignin('base', 'andSTRF', andSTRF);
     
     % Compute cross correlation between coin1/2STRFs, OR/AND STRF
-    coin1CorrOr = normxcorr2(coin1STRF1s, orSTRF);
-    coin1CorrAnd = normxcorr2(coin1STRF1s, andSTRF);
+    coin1CorrOr = corr2(coin1STRF1s, orSTRF);
+    coin1CorrAnd = corr2(coin1STRF1s, andSTRF);
     assignin('base', 'coin1CorrOr', coin1CorrOr);
     assignin('base', 'coin1Corr', coin1CorrAnd);
     % Index of zero lag is (0+rows, 0+cols) 
@@ -162,8 +164,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     coin1CorrAndZeroLag = coin1CorrAnd(zeroLagRowIndex, zeroLagColIndex);
     assignin('base', 'coin1CorrOrZeroLag', coin1CorrOrZeroLag);
     assignin('base', 'coin1CorrAndZeroLag', coin1CorrAndZeroLag);
-    coin2CorrOr = normxcorr2(coin2STRF1s, orSTRF);
-    coin2CorrAnd = normxcorr2(coin2STRF1s, andSTRF);
+    coin2CorrOr = corr2(coin2STRF1s, orSTRF);
+    coin2CorrAnd = corr2(coin2STRF1s, andSTRF);
     assignin('base', 'coin2CorrOr', coin2CorrOr);
     assignin('base', 'coin2Corr', coin2CorrAnd);
     coin2CorrOrZeroLag = coin2CorrOr(zeroLagRowIndex, zeroLagColIndex);
