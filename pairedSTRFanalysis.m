@@ -4,8 +4,7 @@
 %   DESCRIPTION : This file computes the significant STRFs of spike times
 %       from 2 clusters, the OR/AND STRF btw the two STRFs,
 %       coincident spike times at calculated optimal bin size, and 
-%       cross correlation btw coincidents/OR-AND STRF
-%   
+%       cross correlation btw coincidents/OR-AND STRF 
 %
 % INPUT PARAMS
 %   spikeClusters   : full path to cluster.mat file containing all spikes
@@ -21,7 +20,7 @@
 %
 % (C) Shannon Lin, Edited Nov 2019
 
-% Tested by running function as follows: 
+% Note to self (run function as follows):
 % pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 9, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
 
 function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version)
