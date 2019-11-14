@@ -16,11 +16,11 @@
 %                       spikeClusters
 %
 % RETURNED VARIABLES
-%   N/A, data saved to workspace
+%   N/A, data saved to workspace and figure outputted
 %
 % (C) Shannon Lin, Edited Nov 2019
 
-% Note to self (run function as follows):
+% Tested function as follows:
 % pairedSTRFanalysis('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', 9, 9, '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu')
 
 function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version)
@@ -99,9 +99,17 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     p=0.05;
     SModType='dB';
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    % get STRF param
+    [clusOneRFParam]=strfparam(oneTaxis,oneFaxis,clusOneSTRF,clusOneNo1,clusOnePP,Sound);
+    clusOneIER = clusOneRFParam.IER; % inhibitory to excitatory ratio
+    assignin('base', 'clusOneIER', clusOneIER);
     clusOneSTRF1s = binarizeSTRFs(clusOneSTRF1s);
     assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
-    [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    
+    [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusTwoNo1,clusTwoWo1,clusOnePP,MdB,ModType,Sound,SModType);
+    [clusTwoRFParam]=strfparam(twoTaxis,twoFaxis,clusTwoSTRF,clusTwoNo1,clusTwoPP,Sound);
+    clusTwoIER = clusTwoRFParam.IER; % inhibitory to excitatory ratio
+    assignin('base', 'clusTwoIER', clusTwoIER);
     clusTwoSTRF1s = binarizeSTRFs(clusTwoSTRF1s);
     assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
     
@@ -112,12 +120,8 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
         try
             [n1Taxis,n1Faxis,n1STRF1A,n1STRF2A,n1PP,n1Wo1A,n1Wo2A,n1No1A,n1No2A,n1SPLNA]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
             [n2Taxis,n2Faxis,n2STRF1A,n2STRF2A,n2PP,n2Wo1A,n2Wo2A,n2No1A,n2No2A,n2SPLNA]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-            assignin('base', 'n1STRF1A', n1STRF1A);
-            assignin('base', 'n2STRF1A', n2STRF1A);
             [n1Taxis,n1Faxis,n1STRF1B,n1STRF2B,n1PP,n1Wo1B,n1Wo2B,n1No1B,n1No2B,n1SPLNB]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
             [n2Taxis,n2Faxis,n2STRF1B,n2STRF2B,n2PP,n2Wo1B,n2Wo2B,n2No1B,n2No2B,n2SPLNB]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-            assignin('base', 'n1STRF1B', n1STRF1B);
-            assignin('base', 'n2STRF1B', n2STRF1B);
         catch me
             disp('Error when computing nSTRF1A/B, exiting function')
             disp(me);
@@ -151,11 +155,9 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     assignin('base', 'orSTRF', orSTRF);
     assignin('base', 'andSTRF', andSTRF);
     
-    % Compute cross correlation between coin1/2STRFs, OR/AND STRF
+    % Compute cross correlations (STRF1/OR,STRF2/OR,STRF1/AND,STRF2/AND)
     coin1CorrOr = corr2(coin1STRF1s, orSTRF);
     coin1CorrAnd = corr2(coin1STRF1s, andSTRF);
-    assignin('base', 'coin1CorrOr', coin1CorrOr);
-    assignin('base', 'coin1Corr', coin1CorrAnd);
     % Index of zero lag is (0+rows, 0+cols) 
     zeroLagRowIndex = size(coin1CorrOr, 1);
     zeroLagColIndex = size(coin1CorrOr, 2);
@@ -165,12 +167,27 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     assignin('base', 'coin1CorrAndZeroLag', coin1CorrAndZeroLag);
     coin2CorrOr = corr2(coin2STRF1s, orSTRF);
     coin2CorrAnd = corr2(coin2STRF1s, andSTRF);
-    assignin('base', 'coin2CorrOr', coin2CorrOr);
-    assignin('base', 'coin2Corr', coin2CorrAnd);
     coin2CorrOrZeroLag = coin2CorrOr(zeroLagRowIndex, zeroLagColIndex);
     coin2CorrAndZeroLag = coin2CorrAnd(zeroLagRowIndex, zeroLagColIndex);
     assignin('base', 'coin2CorrOrZeroLag', coin2CorrOrZeroLag);
     assignin('base', 'coin2CorrAndZeroLag', coin2CorrAndZeroLag);
+    coin1CorrCoin2 = corr2(coin1STRF1s, coin2STRF1s);
+    coin1CorrCoin2ZeroLag = coin1CorrCoin2(zeroLagRowIndex, zeroLagColIndex);
+    assignin('base', 'coin1CorrCoin2ZeroLag', coin1CorrCoin2ZeroLag);
+    
+    % Using Monty's code to calculate xcorr
+    RSTRF = strfcorrcorrected(clusOneSTRF1A,clusOneSTRF1B,clusOneSTRF1s,clusTwoSTRF1A,clusTwoSTRF1B,clusTwoSTRF1s,n2Taxis,n2Faxis,n2PP);
+    montyR = RSTRF.R;
+    montyCoin1CorrCoin2ZeroLag = montyR(zeroLagRowIndex, zeroLagColIndex);
+    assignin('base', 'MontyRSTRF', RSTRF);
+    
+    % Retrieve PLI index from strfparam code found in Keck toolbox
+    RFParam1 = strfparam(oneTaxis,oneFaxis,clusOneSTRF1s,n1Wo1,n1PP);
+    RFParam2 = strfparam(twoTaxis,twoFaxis,clusTwoSTRF1s,n2Wo1,n2PP);
+    onePLI = RFParam1.PLI;
+    twoPLI = RFParam2.PLI;
+    assignin('base', 'RFParam1', RFParam1);
+    assignin('base', 'RFParam2', RFParam2);
     
     % plot STRF, STRFs, coinSTRF, coinSTRFs
     rows = 6;
@@ -180,85 +197,121 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster1) ' STRF']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster2) ' STRF']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster1) ' coinSTRF']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster2) ' coinSTRF']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),clusOneSTRF1s);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster1) ' STRFs']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(twoTaxis,log2(twoFaxis/twoFaxis(1)),clusTwoSTRF1s);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster2) ' STRFs']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF1s);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster1) ' coinSTRFs']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF1s);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title(['#' int2str(cluster2) ' coinSTRFs']);
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),orSTRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title('orSTRF');
     
     subplot(rows,cols,num)
     num = num + 1;
     pcolor(oneTaxis,log2(oneFaxis/oneFaxis(1)),andSTRF);
-    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+    colormap cool;set(gca,'YDir','normal'); shading flat;
     title('andSTRF');
     
-    xAxis = 0.1;
-    yAxis = 1;
-    offset = -0.3;
+    % output various param values (xcorr, IER, PLI)
+    initialX = 0.1;
+    initialY = 1;
+    xAxis = initialX;
+    yAxis = initialY;
+    offsetX = 0.75;
+    offsetY = -0.3;
     corrOr1 = subplot(rows, cols, num);
     text(xAxis, yAxis,['coin' int2str(cluster1) 'CorrOrZeroLag: ' num2str(coin1CorrOrZeroLag)]);
-    yAxis = yAxis + offset;
+    yAxis = yAxis + offsetY;
     set (corrOr1, 'visible', 'off')
     
     corrAnd1 = subplot(rows, cols, num);
     text(xAxis, yAxis,['coin' int2str(cluster1) 'CorrAndZeroLag: ' num2str(coin1CorrAndZeroLag)]);
-    yAxis = yAxis + offset;
+    yAxis = yAxis + offsetY;
     set (corrAnd1, 'visible', 'off')
     
+    oneIER = subplot(rows, cols, num);
+    text(xAxis, yAxis,['coin' int2str(cluster1) 'IER: ' num2str(clusOneIER)]);
+    yAxis = yAxis + offsetY;
+    set (oneIER, 'visible', 'off')
+    
+    PLI1 = subplot(rows, cols, num);
+    text(xAxis, yAxis,['clus' int2str(cluster1)  'PLI: ' num2str(onePLI)]);
+    set (PLI1 , 'visible', 'off')
+    
     corrOr2 = subplot(rows, cols, num);
+    xAxis = xAxis + offsetX;
+    yAxis = initialY;
     text(xAxis, yAxis,['coin' int2str(cluster2) 'CorrOrZeroLag: ' num2str(coin2CorrOrZeroLag)]);
-    yAxis = yAxis + offset;
+    yAxis = yAxis + offsetY;
     set (corrOr2, 'visible', 'off')
     
     corrAnd2 = subplot(rows, cols, num);
     text(xAxis, yAxis,['coin' int2str(cluster2) 'CorrAndZeroLag: ' num2str(coin2CorrAndZeroLag)]);
+    yAxis = yAxis + offsetY;
     set (corrAnd2, 'visible', 'off')
-  
+    
+    twoIER = subplot(rows, cols, num);
+    text(xAxis, yAxis,['clus' int2str(cluster2)  'IER: ' num2str(clusTwoIER)]);
+    yAxis = yAxis + offsetY;
+    set (twoIER, 'visible', 'off')
+    
+    PLI2 = subplot(rows, cols, num);
+    text(xAxis, yAxis,['clus' int2str(cluster2)  'PLI: ' num2str(twoPLI)]);
+    set (PLI2 , 'visible', 'off')
+    
+    coin1CorrCoin2 = subplot(rows, cols, num);
+    xAxis = xAxis + offsetX;
+    yAxis = initialY;
+    text(xAxis, yAxis,['coin' int2str(cluster1) 'coin' int2str(cluster2) 'corr: ' num2str(coin1CorrCoin2ZeroLag)]);
+    yAxis = yAxis + offsetY;
+    set (coin1CorrCoin2 , 'visible', 'off')
+    
+    montyCoin1CorrCoin2 = subplot(rows, cols, num);
+    text(xAxis, yAxis,['Monty coin' int2str(cluster1) 'coin' int2str(cluster2) 'corr: ' num2str(montyCoin1CorrCoin2ZeroLag)]);
+    set (montyCoin1CorrCoin2 , 'visible', 'off')
+    
     % close all opened files
     fclose all;
 end
