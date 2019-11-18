@@ -99,17 +99,10 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     p=0.05;
     SModType='dB';
     [clusOneSTRF1s,clusOneTresh1]=wstrfstat(clusOneSTRF,p,clusOneNo1,clusOneWo1,clusOnePP,MdB,ModType,Sound,SModType);
-    % get STRF param
-    [clusOneRFParam]=strfparam(oneTaxis,oneFaxis,clusOneSTRF,clusOneNo1,clusOnePP,Sound);
-    clusOneIER = clusOneRFParam.IER; % inhibitory to excitatory ratio
-    assignin('base', 'clusOneIER', clusOneIER);
     clusOneSTRF1s = binarizeSTRFs(clusOneSTRF1s);
     assignin('base', 'clusOneSTRF1s', clusOneSTRF1s);
     
     [clusTwoSTRF1s,clusTwoTresh1]=wstrfstat(clusTwoSTRF,p,clusTwoNo1,clusTwoWo1,clusOnePP,MdB,ModType,Sound,SModType);
-    [clusTwoRFParam]=strfparam(twoTaxis,twoFaxis,clusTwoSTRF,clusTwoNo1,clusTwoPP,Sound);
-    clusTwoIER = clusTwoRFParam.IER; % inhibitory to excitatory ratio
-    assignin('base', 'clusTwoIER', clusTwoIER);
     clusTwoSTRF1s = binarizeSTRFs(clusTwoSTRF1s);
     assignin('base', 'clusTwoSTRF1s', clusTwoSTRF1s);
     
@@ -181,11 +174,13 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     montyCoin1CorrCoin2ZeroLag = montyR(zeroLagRowIndex, zeroLagColIndex);
     assignin('base', 'MontyRSTRF', RSTRF);
     
-    % Retrieve PLI index from strfparam code found in Keck toolbox
-    RFParam1 = strfparam(oneTaxis,oneFaxis,clusOneSTRF1s,n1Wo1,n1PP);
-    RFParam2 = strfparam(twoTaxis,twoFaxis,clusTwoSTRF1s,n2Wo1,n2PP);
+    % Retrieve IER & PLI index from strfparam code found in Keck toolbox
+    RFParam1 = strfparam(oneTaxis,oneFaxis,clusOneSTRF,n1Wo1,n1PP);
+    RFParam2 = strfparam(twoTaxis,twoFaxis,clusTwoSTRF,n2Wo1,n2PP);
     onePLI = RFParam1.PLI;
     twoPLI = RFParam2.PLI;
+    oneIER = RFParam1.IER;
+    twoIER = RFParam2.IER;
     assignin('base', 'RFParam1', RFParam1);
     assignin('base', 'RFParam2', RFParam2);
     
@@ -271,10 +266,10 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     yAxis = yAxis + offsetY;
     set (corrAnd1, 'visible', 'off')
     
-    oneIER = subplot(rows, cols, num);
-    text(xAxis, yAxis,['coin' int2str(cluster1) 'IER: ' num2str(clusOneIER)]);
+    IER1 = subplot(rows, cols, num);
+    text(xAxis, yAxis,['coin' int2str(cluster1) 'IER: ' num2str(oneIER)]);
     yAxis = yAxis + offsetY;
-    set (oneIER, 'visible', 'off')
+    set (IER1, 'visible', 'off')
     
     PLI1 = subplot(rows, cols, num);
     text(xAxis, yAxis,['clus' int2str(cluster1)  'PLI: ' num2str(onePLI)]);
@@ -292,10 +287,10 @@ function pairedSTRFanalysis(spikeClusters,cluster1,cluster2,sprfile,Trig,version
     yAxis = yAxis + offsetY;
     set (corrAnd2, 'visible', 'off')
     
-    twoIER = subplot(rows, cols, num);
-    text(xAxis, yAxis,['clus' int2str(cluster2)  'IER: ' num2str(clusTwoIER)]);
+    IER2 = subplot(rows, cols, num);
+    text(xAxis, yAxis,['clus' int2str(cluster2)  'IER: ' num2str(twoIER)]);
     yAxis = yAxis + offsetY;
-    set (twoIER, 'visible', 'off')
+    set (IER2, 'visible', 'off')
     
     PLI2 = subplot(rows, cols, num);
     text(xAxis, yAxis,['clus' int2str(cluster2)  'PLI: ' num2str(twoPLI)]);
