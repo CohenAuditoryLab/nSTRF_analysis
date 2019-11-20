@@ -27,3 +27,6 @@ significant, 0 else. Significance is determined as any pixel greater than thresh
 This file records individual cluster parameters in struct clusData including . This file also records pairwise 
 analysis indices in pairedData struct including
 
+**Monty's code**
+rtwstrfdbint.m, strfcorrcorrected.m	, strfparam.m, wstrfstat.m, xcorrspike.m
+
