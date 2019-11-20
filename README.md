@@ -9,7 +9,7 @@ Monty's summary of files in his code base, helpful in locating particular functi
 
 **collectParams.m**
 
-Main file of the project. This file records individual cluster parameters in struct clusData including . This file also records pairwise 
+Main file of the project. This file records individual cluster parameters in struct clusData including cluster number, spike train, spike event time, STRF1A, STRF1B, STRF1s, and all parameters from strfparam including . This file also records pairwise 
 analysis indices in pairedData struct including
 
 
