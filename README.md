@@ -6,8 +6,7 @@ uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
 **pairedSTRFanalysis.m:**
 
 This file computes the significant STRFs of spike times from 2 clusters, the OR/AND STRF btw the two STRFs,
-coincident spike times at calculated optimal bin size, and 
-cross correlation between coincident spikes and OR/AND STRF.
+coincident spike times at calculated optimal bin size, and cross correlation between coincident spikes and OR/AND STRF.
 
 **findOverlap2.m:**
 
@@ -21,7 +20,7 @@ This file computes optimal bin size to use when recording coincident spike times
 **binarizeSTRFs.m:**
 
 This file computes the siginificant STRF using Monty's wstrfstat.m and then converts the outputted STRFs to 0/1 where 1 is 
-significant, 0 else. Significance is determined as any pixels
+significant, 0 else. Significance is determined as any pixel greater than threshold, which I defined as 0.05/total number of pixels. The result of this file was used to calculate OR/AND STRF between two STRFs using logical or/and between respective pixels.
 
 **collectParams.m**
 
