@@ -10,7 +10,7 @@ Monty's summary of files in his code base, helpful in locating particular functi
 **collectParams.m**
 
 Main file of the project. This file records individual cluster parameters in struct clusData.This file also records pairwise 
-analysis indices in pairedData struct.
+analysis indices in pairedData struct. Can be easily modified to hold more parameters if of interest.
 
 clusData parameters include: 
 cluster number, spike train, spike event time, STRF1A, STRF1B, STRF1s, and all parameters from Monty's strfparam including delay, duration, best frequency (in octaves and Hz), spectral bandwidth (octaves and Hz), delay at STRF peak, best frequency at peak, delay measurement at peak of temporal envelope, best frequency at peak of spectral envelope, various envelope duration measurements, best modulation rate, best ripple density, best temporal modulation frequency, best spectral modulation freq, temporal modulation freq centroid, spectral modulation freq centroid, spectral MTF bandwidth, temporal MTF bandwidth, temporal modulation freq upper/lower cutoff, spectral modulation freq upper/lower cutoff, direction selectivity inde, peak response from ripple density plot, temporal envelope, spectral envelope, phase locking index.
