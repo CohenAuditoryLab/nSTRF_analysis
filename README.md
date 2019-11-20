@@ -1,7 +1,11 @@
-**Overall goal of project:**
+***Overall goal of project:***
 
 Analyze pairwise correlations between neurons in various layers. Used Cassius_190324 and Cassius_190326 data in Shannon folder 
 uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
+
+**Contents.m**
+
+Monty's summary of files in his code base, helpful in locating particular functions.
 
 **pairedSTRFanalysis.m:**
 
@@ -28,5 +32,6 @@ This file records individual cluster parameters in struct clusData including . T
 analysis indices in pairedData struct including
 
 **Monty's code**
+
 rtwstrfdbint.m, strfcorrcorrected.m	, strfparam.m, wstrfstat.m, xcorrspike.m
 
