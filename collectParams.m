@@ -1,10 +1,9 @@
-% function [clusData] = collectParams(spikeClusters,sprfile,Trig,version)
+% function collectParams(spikeClusters,sprfile,Trig,version)
 %
 %   FILE NAME   : collectParams.m
-%   DESCRIPTION : This file save various cluster parameters in nxn matrix
-%       where n = number of clusters in inputted spikeClusters .mat file;
-%       (i,i) in outputted matrix has fields from strfparam, (i, j)
-%       contains pairedSTRFanalysis data with cluster i and j
+%   DESCRIPTION : This file save individual cluster parameters in
+%       struct clusData. Also saves pairwise 
+%       analysis data in pairedData struct
 %       
 %
 % INPUT PARAMS
@@ -18,8 +17,8 @@
 %   N/A
 
 % VARIABLES SAVED TO WORKSPACE
-% clusData          : contains individual params
-% pairData          : contains cross correlation parameters
+%   clusData          : contains individual params
+%   pairData          : contains cross correlation parameters
 %
 % (C) Shannon Lin, Edited Nov 2019
 
@@ -62,13 +61,13 @@ function collectParams(spikeClusters,sprfile,Trig,version)
     SModType='dB';
     
     % Store STRF, STRFs data of each cluster to a struct
-    for k=1:3
+    for k=1:numClusters
         % Compute spike event times
         spike = spikeTimeRipClus{k, 2};
         spet = spike * Fss;
         try
-            [taxis,faxis,STRF1A,STRF2A,PP,Wo1A,Wo2A,No1A,No2A,SPLN]=rtwstrfdbint(sprfile,T1,T2,spet',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-            [taxis,faxis,STRF1B,STRF2B,PP,Wo1B,Wo2B,No1B,No2B,SPLN]=rtwstrfdbint(sprfile,T1,T2,spet',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+            [~,~,STRF1A,~,~,Wo1A,~,No1A,~,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+            [taxis,faxis,STRF1B,~,PP,Wo1B,~,No1B,~,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
         catch me
             disp('Error when computing STRF1/STRF2 of cluster %d, exiting function', spikeTimeRipClus{k, 1})
             disp(me);
@@ -81,7 +80,7 @@ function collectParams(spikeClusters,sprfile,Trig,version)
         Wo1 = (Wo1A + Wo1B)/2;
         
         % Compute significant STRF
-        [STRF1s,Tresh1]=wstrfstat(STRF,p,No1,Wo1,PP,MdB,ModType,Sound,SModType);
+        [STRF1s,~]=wstrfstat(STRF,p,No1,Wo1,PP,MdB,ModType,Sound,SModType);
         % Convert to 0/1s
         STRF1s = binarizeSTRFs(STRF1s);
         
@@ -89,6 +88,8 @@ function collectParams(spikeClusters,sprfile,Trig,version)
         clusParam.num = spikeTimeRipClus{k, 1};
         clusParam.spike = spike;
         clusParam.spet = spet;
+        clusParam.STRF1A = STRF1A;
+        clusParam.STRF1B = STRF1B;
         clusParam.STRF1s = STRF1s;
         [RFParam]=strfparam(taxis,faxis,STRF,No1,PP,Sound);
         for fn = fieldnames(RFParam)'
@@ -99,14 +100,31 @@ function collectParams(spikeClusters,sprfile,Trig,version)
         clusData(k, 1) = clusParam;
     end
     assignin('base', 'clusData', clusData);
-    
-    for i=1:2
-        for j=1:2
+    entered = 0;
+    for i=1:numClusters
+        for j=1:numClusters
             if (i == j)
-                pairedClusData(i, j) = clusData(i, 1);
+                continue;
             else
-                pairData.clusOne = spikeTimeRipClus{i, 1};
-                pairData.clusOne = spikeTimeRipClus{j, 1};
+                clusNo1 = spikeTimeRipClus{i, 1};
+                clusNo2 = spikeTimeRipClus{j, 1};
+                if (entered == 1)
+                    % analyze if not yet analyzed in diff pairing order
+                    allClusOnes = [pairedData.clusOne];
+                    allClusTwos = [pairedData.clusTwo];
+                    index = find(allClusOnes == clusNo2);
+                    if (index > 0)
+                        continue;
+                    end
+                    index = find(allClusTwos == clusNo1);
+                    if (index > 0)
+                        continue;
+                    end
+                end
+                entered = 1;
+                pairData.clusOne = clusNo1;
+                pairData.clusTwo = clusNo2;
+                % Retrieve STRF params from clusData struct
                 struct1 = clusData(i, 1);
                 struct2 = clusData(j, 1);
                 % Find optimal bin size
@@ -122,10 +140,10 @@ function collectParams(spikeClusters,sprfile,Trig,version)
                     spet1=coin1 * Fss;
                     spet2=coin2 * Fss;
                     try
-                        [n1Taxis,n1Faxis,n1STRF1A,n1STRF2A,n1PP,n1Wo1A,n1Wo2A,n1No1A,n1No2A,n1SPLNA]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-                        [n1Taxis,n1Faxis,n1STRF1B,n1STRF2B,n1PP,n1Wo1B,n1Wo2B,n1No1B,n1No2B,n1SPLNB]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-                        [n2Taxis,n2Faxis,n2STRF1A,n2STRF2A,n2PP,n2Wo1A,n2Wo2A,n2No1A,n2No2A,n2SPLNA]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-                        [n2Taxis,n2Faxis,n2STRF1B,n2STRF2B,n2PP,n2Wo1B,n2Wo2B,n2No1B,n2No2B,n2SPLNB]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+                        [~,~,n1STRF1A,~,~,n1Wo1A,~,n1No1A,~,~]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+                        [~,~,n1STRF1B,~,n1PP,n1Wo1B,~,n1No1B,~,~]=rtwstrfdbint(sprfile,T1,T2,spet1',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+                        [~,~,n2STRF1A,~,~,n2Wo1A,~,n2No1A,~,~]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+                        [n2Taxis,n2Faxis,n2STRF1B,~,n2PP,n2Wo1B,~,n2No1B,~,~]=rtwstrfdbint(sprfile,T1,T2,spet2',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
                     catch me
                         disp('Error when computing nSTRF1A/B, exiting function')
                         disp(me);
@@ -144,15 +162,16 @@ function collectParams(spikeClusters,sprfile,Trig,version)
                 end
 
                 % Compute significant coinSTRFs
-                [coin1STRFs,n1Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+                [coin1STRFs,~]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
                 coin1STRFs = binarizeSTRFs(coin1STRFs);
                 pairData.coin1STRFs = coin1STRFs;
-                [coin2STRFs,n2Tresh1]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+                [coin2STRFs,~]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
                 coin2STRFs = binarizeSTRFs(coin2STRFs);
                 pairData.coin2STRFs = coin2STRFs;
 
-                [~, index1] = find([clusData.num] == i);
-                [~, index2] = find([clusData.num] == j);
+                [~, index1] = find([clusData.num] == clusNo1);
+                [~, index2] = find([clusData.num] == clusNo2);
+                
                 clusOneSTRF1s = clusData(index1).STRF1s;
                 clusTwoSTRF1s = clusData(index2).STRF1s;
                 % Compute OR/AND STRF from STRFs
@@ -170,6 +189,7 @@ function collectParams(spikeClusters,sprfile,Trig,version)
                 % Index of zero lag is (0+rows, 0+cols) 
                 zeroLagRowIndex = size(coin1CorrOr, 1);
                 zeroLagColIndex = size(coin1CorrOr, 2);
+                % Compute cross corrs (coin1/OR, coin2/OR, coin1/coin2)
                 coin1CorrOrZeroLag = coin1CorrOr(zeroLagRowIndex, zeroLagColIndex);
                 coin1CorrAndZeroLag = coin1CorrAnd(zeroLagRowIndex, zeroLagColIndex);
                 pairData.coin1CorrOrZeroLag = coin1CorrOrZeroLag;
@@ -186,17 +206,22 @@ function collectParams(spikeClusters,sprfile,Trig,version)
                 coin1CorrCoin2ZeroLag = coin1CorrCoin2(zeroLagRowIndex, zeroLagColIndex);
                 pairData.coin1CorrCoin2ZeroLag = coin1CorrCoin2ZeroLag;
 
-                % Using Monty's code to calculate xcorr
+                % Using Monty's code to calculate coin1/coin2 xcorr
+                % (TO DO: why is it a diff # than what I get?)
+                clusOneSTRF1A = clusData(index1).STRF1A;
+                clusOneSTRF1B = clusData(index1).STRF1B;
+                clusTwoSTRF1A = clusData(index2).STRF1A;
+                clusTwoSTRF1B = clusData(index2).STRF1B;
                 RSTRF = strfcorrcorrected(clusOneSTRF1A,clusOneSTRF1B,clusOneSTRF1s,clusTwoSTRF1A,clusTwoSTRF1B,clusTwoSTRF1s,n2Taxis,n2Faxis,n2PP);
                 montyR = RSTRF.R;
                 montyCoin1CorrCoin2ZeroLag = montyR(zeroLagRowIndex, zeroLagColIndex);
                 pairData.montyCoin1CorrCoin2ZeroLag = montyCoin1CorrCoin2ZeroLag;
                 pairData.MontyRSTRF = RSTRF;
                 
-                pairedClusData(i, j) = pairData;
+                pairedData(i, 1) = pairData;
+                assignin('base', 'pairedData', pairedData);
             end
         end
-    end
-   
+    end 
 end
 
