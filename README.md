@@ -7,6 +7,12 @@ uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
 
 Monty's summary of files in his code base, helpful in locating particular functions.
 
+**collectParams.m**
+
+Main file of the project. This file records individual cluster parameters in struct clusData including . This file also records pairwise 
+analysis indices in pairedData struct including
+
+
 **pairedSTRFanalysis.m:**
 
 This file computes the significant STRFs of spike times from 2 clusters, the OR/AND STRF btw the two STRFs,
@@ -25,11 +31,6 @@ This file computes optimal bin size to use when recording coincident spike times
 
 This file computes the siginificant STRF using Monty's wstrfstat.m and then converts the outputted STRFs to 0/1 where 1 is 
 significant, 0 else. Significance is determined as any pixel greater than threshold, which I defined as 0.05/total number of pixels. The result of this file was used to calculate OR/AND STRF between two STRFs using logical or/and between respective pixels.
-
-**collectParams.m**
-
-This file records individual cluster parameters in struct clusData including . This file also records pairwise 
-analysis indices in pairedData struct including
 
 **Monty's code**
 
