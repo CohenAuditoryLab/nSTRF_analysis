@@ -44,6 +44,7 @@ function getPaired(spikeClusters,sprfile,Trig,version, indices)
     s_bin=0.15;
     T1=0;
     T2=s_bin;
+    % T2 = 0.25; gives me trouble w coin1STRFs and orSTRF dims
     Fss=24414.0625;
     SPL=80;
     MdB=30;
@@ -54,6 +55,21 @@ function getPaired(spikeClusters,sprfile,Trig,version, indices)
     sprtype='float';
     p=0.05;
     SModType='dB';
+
+    % Monty's values from ShuffleXCorr, issues arise when computing
+    % xcorr btw coin1STRFs and orSTRF bc diff size
+%     T1=0;
+%     T2=.25;
+%     Fss=24414.0625;
+%     SPL=70;
+%     MdB=30;
+%     ModType='dB';
+%     SModType='dB';
+%     Sound='MR';
+%     NBlocks=400;
+%     sprtype='float';
+%     p=0.001;
+%     UF=10;
 
     entered = 0;
     numIter = 1;
@@ -83,9 +99,13 @@ function getPaired(spikeClusters,sprfile,Trig,version, indices)
                 % Retrieve STRF params from clusData struct
                 struct1 = clusData(i, 1);
                 struct2 = clusData(j, 1);
-                % Find optimal bin size
+                
+                
+                
+                % Find optimal bin size to calculate coincident spike times
                 optimalBinSize = findBin(Fss, struct1.spet, struct2.spet);
                 pairData.optimalBinSize = optimalBinSize;
+                
                 % Find coincident spike times for spike1 and spike2
                 [coin1, coin2] = findOverlap2(struct1.spike, struct2.spike, optimalBinSize);
                 nSTRFOne.coin = coin1;
@@ -135,30 +155,84 @@ function getPaired(spikeClusters,sprfile,Trig,version, indices)
                 [coin2STRFs,twoTresh]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
                 coin2STRFs = binarizeSTRFs(coin2STRFs);
                 nSTRFTwo.STRFs = coin2STRFs;
-                treshType = 'nsvd';
-                Method = 'nsvd';
-                display = 'n';
-                [STRFm,STRFam,STRFbm,STRFcm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,Errs,alpha_d,N]=gstrfmodel(coin1STRF,n1Taxis,n1Faxis,n1PP,oneTresh,treshType,Method,display);
-                nSTRFOne.STRFm = STRFm;
-                nSTRFOne.STRFam = STRFam;
-                nSTRFOne.STRFbm = STRFbm;
-                nSTRFOne.STRFcm = STRFcm;
-                nSTRFOne.x0 = x0;
-                nSTRFOne.w = w;
-                nSTRFOne.sf0 = sf0;
-                nSTRFOne.spectrop = spectrop;
-                nSTRFOne.t0 = t0;
-                nSTRFOne.c = c;
-                nSTRFOne.tf0 = tf0;
-                nSTRFOne.q = q;
-                nSTRFOne.k = k;
-                nSTRFOne.belta = belta;
-                nSTRFOne.SIs = SIs;
-                nSTRFOne.SIt = SIt;
-                nSTRFOne.SI = SI;
-                nSTRFOne.Errs = Errs;
-                nSTRFOne.alpha_d = alpha_d;
-                nSTRFOne.N = N;
+                
+%                 % Monty's ShuffleXCorr
+%                 spet1 = struct1.spet;
+%                 spet2 = struct2.spet;
+%                 [spet1A,spet1B]=spet2spetab(spet1,TrigA,TrigB,Fs);
+%                 [spet2A,spet2B]=spet2spetab(spet2,TrigA,TrigB,Fs);
+%                 [spet1As]=shufflespet(spet1A);
+%                 [spet1Bs]=shufflespet(spet1B);
+%                 [spet2As]=shufflespet(spet2A);
+%                 [spet2Bs]=shufflespet(spet2B);
+%                 
+%                 %Trial Shuffled spike train cross covariance
+%                 Disp='n';
+%                 [R1A2B]=xcovspike(spet1A,spet2B,Fs,Fsd,MaxTau,Disp);
+%                 [R1B2A]=xcovspike(spet1A,spet2B,Fs,Fsd,MaxTau,Disp);
+%                 R12shuf=(R1A2B+R1B2A)/2;
+%                 pairData.R12shuf = R12shuf;
+%                 
+%                 %Spike train cross covariance
+%                 [R1A2A]=xcovspike(spet1A,spet2A,Fs,Fsd,MaxTau,Disp);
+%                 [R1B2B]=xcovspike(spet1B,spet2B,Fs,Fsd,MaxTau,Disp);
+%                 R12=(R1A2A+R1B2B)/2;
+%                 pairData.R12 = R12;
+%                 
+%                 %Random Control - Trial shuffled Spike train cross covariance
+%                 [R1A2Bs]=xcovspike(spet1As,spet2Bs,Fs,Fsd,MaxTau,Disp);
+%                 [R1B2As]=xcovspike(spet1As,spet2Bs,Fs,Fsd,MaxTau,Disp);
+%                 R12shuf_s=(R1A2B+R1B2A)/2;
+%                 pairData.R12shuf_s = R12shuf_s;
+%                 
+%                 %Random Control - Spike train cross covariance
+%                 [R1A2As]=xcovspike(spet1As,spet2As,Fs,Fsd,MaxTau,Disp);
+%                 [R1B2Bs]=xcovspike(spet1Bs,spet2Bs,Fs,Fsd,MaxTau,Disp);
+%                 R12s=(R1A2As+R1B2Bs)/2;
+%                 pairData.R12s = R12s;
+%                 
+%                 % Get STRFs
+%                 STRF1s = struct1.STRF1s;
+%                 STRF2s = struct1.STRF2s;
+%
+%                 % Predict Correlation From the STRFs - Chen 2012
+%                 [T,R,Rcc,RR]=strf2xcorr(taxis,faxis,STRF1s,STRF2s,PP,'n');
+%                 pairData.T = T;
+%                 pairData.R = R;
+%                 pairData.Rcc = Rcc;
+%                 pairData.RR = RR;
+
+%                 %Receptive field covariance
+%                 [RSTRF] = strfcorr(STRF1s,STRF2s,taxis,faxis,PP,100,4);
+%                 pairData.RSTRF = RSTRF;
+                
+%                 % Save more indices from gstrfmodel for both nSTRF
+%                   code is broken, taken from keck folder
+%                   gstrfmodel contains separability index
+%                 treshType = 'nsvd';
+%                 Method = 'nsvd';
+%                 display = 'n';
+%                 [STRFm,STRFam,STRFbm,STRFcm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,Errs,alpha_d,N]=gstrfmodel(coin1STRF,n1Taxis,n1Faxis,n1PP,oneTresh,treshType,Method,display);
+%                 nSTRFOne.STRFm = STRFm;
+%                 nSTRFOne.STRFam = STRFam;
+%                 nSTRFOne.STRFbm = STRFbm;
+%                 nSTRFOne.STRFcm = STRFcm;
+%                 nSTRFOne.x0 = x0;
+%                 nSTRFOne.w = w;
+%                 nSTRFOne.sf0 = sf0;
+%                 nSTRFOne.spectrop = spectrop;
+%                 nSTRFOne.t0 = t0;
+%                 nSTRFOne.c = c;
+%                 nSTRFOne.tf0 = tf0;
+%                 nSTRFOne.q = q;
+%                 nSTRFOne.k = k;
+%                 nSTRFOne.belta = belta;
+%                 nSTRFOne.SIs = SIs;
+%                 nSTRFOne.SIt = SIt;
+%                 nSTRFOne.SI = SI;
+%                 nSTRFOne.Errs = Errs;
+%                 nSTRFOne.alpha_d = alpha_d;
+%                 nSTRFOne.N = N;
                 
                 % Save struct of cluster one and two data
                 pairData.nSTRFOne = nSTRFOne;
@@ -173,6 +247,7 @@ function getPaired(spikeClusters,sprfile,Trig,version, indices)
                 
                 % Compute OR/AND STRF from STRFs
                 orSTRF = clusOneSTRF1s | clusTwoSTRF1s;
+                assignin('base', 'orSTRF', orSTRF);
                 andSTRF = clusOneSTRF1s & clusTwoSTRF1s;
                 orSTRF = double(orSTRF);
                 andSTRF = double(andSTRF);

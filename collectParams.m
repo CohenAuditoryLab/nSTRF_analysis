@@ -85,7 +85,7 @@ function collectParams(spikeClusters,sprfile,Trig,version)
         STRF1s = binarizeSTRFs(STRF1s);
         
         % Assign fields in struct
-        clusParam.num = spikeTimeRipClus{k, 1};
+        clusParam.clusterNo = spikeTimeRipClus{k, 1};
         clusParam.spike = spike;
         clusParam.spet = spet;
         clusParam.STRF1A = STRF1A;
@@ -100,6 +100,8 @@ function collectParams(spikeClusters,sprfile,Trig,version)
         clusData(k, 1) = clusParam;
     end
     assignin('base', 'clusData', clusData);
+    
+    Fss=24414.0625;
     entered = 0;
     for i=1:numClusters
         for j=1:numClusters
@@ -162,10 +164,10 @@ function collectParams(spikeClusters,sprfile,Trig,version)
                 end
 
                 % Compute significant coinSTRFs
-                [coin1STRFs,~]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+                [coin1STRFs,oneTresh]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
                 coin1STRFs = binarizeSTRFs(coin1STRFs);
                 pairData.coin1STRFs = coin1STRFs;
-                [coin2STRFs,~]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+                [coin2STRFs,twoTresh]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
                 coin2STRFs = binarizeSTRFs(coin2STRFs);
                 pairData.coin2STRFs = coin2STRFs;
 
