@@ -3,20 +3,27 @@
 Analyze pairwise correlations between neurons in various layers. Used Cassius_190324 and Cassius_190326 data in Shannon folder 
 uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
 
+**Main 3 final files:**
+getIndividual.m: computes and saves various pairwise parameters
+getPaired.m: computes and saves various individual cluster parameters
+mommaScript.m: script to run the above two scripts
+
 **Contents.m**
 
 Monty's summary of files in his code base, helpful in locating particular functions.
 
-**collectParams.m**
+**getIndividual.m**
 
-Main file of the project. This file records individual cluster parameters in struct clusData.This file also records pairwise 
-analysis indices in pairedData struct. Can be easily modified to hold more parameters if of interest.
+This file records individual cluster parameters in struct clusData. Can be easily modified to hold more parameters if of interest.
 
 clusData parameters include: 
-cluster number, spike train, spike event time, STRF1A, STRF1B, STRF1s, and all parameters from Monty's strfparam including delay, duration, best frequency (in octaves and Hz), spectral bandwidth (octaves and Hz), delay at STRF peak, best frequency at peak, delay measurement at peak of temporal envelope, best frequency at peak of spectral envelope, various envelope duration measurements, best modulation rate, best ripple density, best temporal modulation frequency, best spectral modulation freq, temporal modulation freq centroid, spectral modulation freq centroid, spectral MTF bandwidth, temporal MTF bandwidth, temporal modulation freq upper/lower cutoff, spectral modulation freq upper/lower cutoff, direction selectivity inde, peak response from ripple density plot, temporal envelope, spectral envelope, phase locking index.
+cluster number, spike train, spike event time, STRF1A, STRF1B, STRF1, STRF1s, STRF1sBinary, and all parameters from Monty's strfparam including delay, duration, best frequency (in octaves and Hz), spectral bandwidth (octaves and Hz), delay at STRF peak, best frequency at peak, delay measurement at peak of temporal envelope, best frequency at peak of spectral envelope, various envelope duration measurements, best modulation rate, best ripple density, best temporal modulation frequency, best spectral modulation freq, temporal modulation freq centroid, spectral modulation freq centroid, spectral MTF bandwidth, temporal MTF bandwidth, temporal modulation freq upper/lower cutoff, spectral modulation freq upper/lower cutoff, direction selectivity inde, peak response from ripple density plot, temporal envelope, spectral envelope, phase locking index.
 
-pairedData parameters include:
+**getPaired.m**
+This file records pairwise analysis indices in pairedData struct.
 
+pairedData parameters include: 
+clusOne (cluster one number), ClusTwo, optimalBinSize, nSTRFOne (STRF of first cluster coincident spike time), nSTRFTwo, orSTRF, andSTRF, coin1CorrOrZeroLag, coin1CorrAndZeroLag, coin2CorrOrZeroLag, coin2CorrAndZeroLag, coin1CorrCoin2ZeroLag, montyCoin1CorrCoin2ZeroLag (xcorr between coincident first spike and coincident second spike using Monty's calculations), MontyRSTRF (struct containing various other indices), T, R, Rcc, RR (last four from Monty's ShuffleXCorr.m)
 
 **pairedSTRFanalysis.m:**
 
