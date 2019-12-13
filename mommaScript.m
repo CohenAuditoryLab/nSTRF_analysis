@@ -1,37 +1,66 @@
-% Defining STRF params
-Params.T1=0;
-Params.T2=0.15;
-Params.Fss=24414.0625;
-Params.SPL=80;
-Params.MdB=30;
-Params.ModType='dB';
-Params.Sound='MR';
-Params.NBlocks=400;
-Params.UF=10;
-Params.sprtype='float';
-Params.p=0.001;
-Params.SModType='dB';
+% function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version,numClusters)
+%
+%   FILE NAME   : mommaScript.m
+%   DESCRIPTION : This file collects individual and pairwise STRF indices
+%       
+%
+% INPUT PARAMS
+%   spikeClusters : full path to .mat containing spike times
+%   sprfile       : full path to spectral profile file
+%   Trig          : full path to trigger data
+%   version       : 'st_clu' or 'spikeTimeRip', which struct is in 
+%                       spikeClusters (Cassius_190326 is "st_clu",
+%                       Cassius_190324 is "spikeTimeRip")
+%   numClusters   : optional argument, can specify number of clusters 
+%                       to analyze, default is analyze all clusters in .mat
+%
+% RETURNED VARIABLES
+%   clusData          : contains individual cluster indices data
+%   pairedData        : contains nSTRF indices data
+%
+% (C) Shannon Lin, Edited Dec 2019
 
-% full path to .mat containing spike times
-spikeClusters = '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat';
+% Note to self, run as follows:
+% mommaScript('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu', 2)
+function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version,numClusters)
+    % Defining STRF params
+    Params.T1=0;
+    Params.T2=0.15;
+    Params.Fss=24414.0625;
+    Params.SPL=80;
+    Params.MdB=30;
+    Params.ModType='dB';
+    Params.Sound='MR';
+    Params.NBlocks=400;
+    Params.UF=10;
+    Params.sprtype='float';
+    Params.p=0.001;
+    Params.SModType='dB';
 
-% full path to .spr sprfile
-sprfile = '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr';
+    % Load in spikeClusters and compute total num of clusters in there
+    spikeTimeRipClusStruct = load(spikeClusters);
+    % Cassius_190324 saved as "spikeTimeRip"
+    % Cassius_190326 data saved as "st_clu" 
+    if (strcmp(version, 'spikeTimeRip'))
+        spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
+    elseif (strcmp(version, 'st_clu'))
+        spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
+    else
+        disp('Invalid version name, please input "st_clu" or "spikeTimeRip"')
+        return;
+    end
+    assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
+    field = sprintf('spikeTimeRipClusStruct.%s', version);
 
-% full path to .mat Trig
-Trig = '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat';
+    % number of clusters to analyze is total number of clusters in
+    % spikeClusters
+    if nargin<5
+         numClusters = size(eval(field),1);
+    end
 
-% Cassius_190324 saved as "spikeTimeRip"
-% Cassius_190326 data saved as "st_clu" 
-version = 'st_clu';
+    % collect indices of individual clusters
+    clusData = getIndividual(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
 
-% 'y' to analyze all clusters
-% 'n' to analyze specified numClusters amt of clusters
-analyzeAll = 'n';
-numClusters = 2;
-
-% collect indices of individual clusters
-getIndividual(Params, spikeClusters, sprfile, Trig, version, analyzeAll, numClusters);
-
-% collect indices of 2STRF clusters
-getPaired(Params, spikeClusters, sprfile, Trig, version, analyzeAll, numClusters);
+    % collect indices of 2STRF clusters
+    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
+end

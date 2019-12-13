@@ -1,4 +1,4 @@
-% function getPaired(Params, spikeClusters,sprfile,Trig,version,analyzeAll,numClusters)
+% function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters)
 %
 %   FILE NAME   : getPaired.m
 %   DESCRIPTION : This file saves pairwise analysis data to a 
@@ -6,42 +6,19 @@
 %       
 %
 % INPUT PARAMS
-%   Params          : specified params to compute STRF
-%   spikeClusters   : full path to cluster.mat file containing all spikes
-%   sprfile         : full path to spectral profile file
-%   Trig            : full path to trigger data
-%   version         : 'st_clu' or 'spikeTimeRip', which struct is in 
-%                       spikeClusters
-%   analyzeAll      : 'y' or 'n', y meaning analyze all clusters in
-%                       spikeClusters, n to input smaller sample size
-%   numClusters     : number of clusters to input if all was 'y'
+%   Params           : specified params to compute STRF
+%   spikeTimeRipClus : struct containing spike times
+%   sprfile          : full path to spectral profile file
+%   Trig             : full path to trigger data
+%   numClusters      : number of clusters to analyze
 %
 % RETURNED VARIABLES
-%   N/A
-%
-% VARIABLES SAVED TO WORKSPACE
-%   pairedData          : contains cross correlation parameters including
+%   pairedData          : contains nSTRF indices data
 %       
 %
 % (C) Shannon Lin, Edited Dec 2019
 
-function getPaired(Params, spikeClusters,sprfile,Trig,version,analyzeAll,numClusters)
-    % Load in spikeClusters and compute num of clusters are in there
-    spikeTimeRipClusStruct = load(spikeClusters);
-    if (strcmp(version, 'spikeTimeRip'))
-        spikeTimeRipClus = spikeTimeRipClusStruct.spikeTimeRipClus;
-    elseif (strcmp(version, 'st_clu'))
-        spikeTimeRipClus = spikeTimeRipClusStruct.st_clu;
-    else
-        disp('Invalid version name, please input "st_clu" or "spikeTimeRip"')
-        return;
-    end
-    assignin('base', 'spikeTimeRipClus', spikeTimeRipClus);
-    field = sprintf('spikeTimeRipClusStruct.%s', version);
-    if (analyzeAll == 'y')
-        numClusters = size(eval(field),1);
-    end
-
+function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters)
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;
