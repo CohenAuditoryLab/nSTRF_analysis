@@ -37,49 +37,6 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
     p=Params.p;
     SModType=Params.SModType;
     
-    % Calculating individual cluster indices
-    % Store STRF, STRFs data of each cluster to a struct
-    for k=1:numClusters
-        % Compute spike event times
-        spike = spikeTimeRipClus{k, 2};
-        spet = spike * Fss;
-        try
-            [~,~,STRF1A,~,~,Wo1A,~,No1A,~,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
-            [taxis,faxis,STRF1B,~,PP,Wo1B,~,No1B,~,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
-        catch me
-            disp('Error when computing STRF1/STRF2 of cluster %d, exiting function', spikeTimeRipClus{k, 1})
-            disp(me);
-            return;
-        end
-        
-        % Average STRF1 from TrigA and TrigB
-        STRF1 = (STRF1A+STRF1B)/2;
-        No1 = No1A + No1B;
-        Wo1 = (Wo1A + Wo1B)/2;
-        
-        % Compute significant STRF
-        [STRF1s,~]=wstrfstat(STRF1,p,No1,Wo1,PP,MdB,ModType,Sound,SModType);
-        % Convert to 0/1s
-        STRF1sBinary = binarizeSTRFs(STRF1s);
-        
-        % Assign fields in struct
-        clusParam.clusterNo = spikeTimeRipClus{k, 1};
-        clusParam.spike = spike;
-        clusParam.spet = spet;
-        clusParam.STRF1A = STRF1A;
-        clusParam.STRF1B = STRF1B;
-        clusParam.STRF1 = STRF1;
-        clusParam.STRF1s = STRF1s;
-        clusParam.STRF1sBinary = STRF1sBinary;
-        [RFParam]=strfparam(taxis,faxis,STRF1,No1,PP,Sound);
-        for fn = fieldnames(RFParam)'
-           clusParam.(fn{1}) = RFParam.(fn{1});
-        end
-        % Save in clusData
-        clusData(k, 1) = clusParam;
-    end
-    assignin('base', 'clusData', clusData);
-    
     entered = 0;
     numIter = 1;
     for i=1:numClusters
@@ -169,13 +126,15 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                 end
                 
                 % Compute significant coinSTRFs
-                [coin1STRFs,oneTresh]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
+                [coin1STRFs,Tresh1]=wstrfstat(coin1STRF,p,n1No1,n1Wo1,n1PP,MdB,ModType,Sound,SModType);
                 coin1STRFsBinary = binarizeSTRFs(coin1STRFs);
                 nSTRFOne.STRFs = coin1STRFs;
+                nSTRFOne.Tresh1 = Tresh1; 
                 nSTRFOne.STRFsBinary = coin1STRFsBinary;
-                [coin2STRFs,twoTresh]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
+                [coin2STRFs,Tresh2]=wstrfstat(coin2STRF,p,n2No1,n2Wo1,n2PP,MdB,ModType,Sound,SModType);
                 coin2STRFsBinary = binarizeSTRFs(coin2STRFs);
                 nSTRFTwo.STRFs = coin2STRFs;
+                nSTRFTwo.Tresh2 = Tresh2; 
                 nSTRFTwo.STRFsBinary = coin2STRFsBinary;
                 
                 % Save struct of cluster one and two data
