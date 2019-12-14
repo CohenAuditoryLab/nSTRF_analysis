@@ -20,11 +20,13 @@
 %
 
 
-function [beta,Y]=srfmodel(X,Y0,BestRD);
+function [beta,Y]=srfmodel(X,Y0,BestRD)
+% Shannon added Y=0, MATLAB error that Y may not have been assigned
+Y = 0;
 
 if nargin<3
     BestRD=0;
-end;
+end
 
 %the envelope of Y
 EY=abs(hilbert(Y0));
@@ -48,7 +50,7 @@ try
     Yt=beta0(5)*exp(-(2*(X-beta0(1))/beta0(2)).^2).*cos(2*pi*beta0(3)*(X-beta0(1))+beta0(4));
     Y=beta(5)*exp(-(2*(X-beta(1))/beta(2)).^2).*cos(2*pi*beta(3)*(X-beta(1))+beta(4));   
     %comparison between fitted result and initial result
-    if (sum((Y-Y0').^2)>sum((Yt-Y0').^2)) & (sum(Y==0)~=length(Y)) 
+    if (sum((Y-Y0').^2)>sum((Yt-Y0').^2)) && (sum(Y==0)~=length(Y)) 
         beta=beta0;
     else if sum(Y==0)==length(Y)
             disp('Warning! Spectral profile is zero');
@@ -67,25 +69,27 @@ try
     end
     if beta(4)>2*pi
         beta(4)=beta(4)-2*pi*round(beta(4)/2/pi);
-    else if beta(4)<-2*pi
+    else
+        if beta(4)<-2*pi
             beta(4)=beta(4)-2*pi*(round(beta(4)/2/pi)-1);
-         end;
-    end;
+        end
+    end
 
     if beta(4)>pi
         beta(4)=beta(4)-2*pi;
-    else if beta(4)<-pi
+    else
+        if beta(4)<-pi
             beta(4)=beta(4)+2*pi;
-         end;
-    end;
+        end
+    end
 
     if sum(Y==0)~=length(Y)
         Y=beta(5)*exp(-(2*(X-beta(1))/beta(2)).^2).*cos(2*pi*beta(3)*(X-beta(1))+beta(4));
     end
 catch
-    disp('Keep initial parameters');
+    % disp('Keep initial parameters');
     beta=beta0;
-end;
+end
 
 
 

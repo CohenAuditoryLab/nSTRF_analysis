@@ -11,6 +11,7 @@
 %   sprfile          : full path to spectral profile file
 %   Trig             : full path to trigger data
 %   numClusters      : number of clusters to analyze
+%   clusData         : contains individual cluster indices data
 %
 % RETURNED VARIABLES
 %   pairedData          : contains nSTRF indices data
@@ -18,7 +19,7 @@
 %
 % (C) Shannon Lin, Edited Dec 2019
 
-function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters)
+function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters,clusData)
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;

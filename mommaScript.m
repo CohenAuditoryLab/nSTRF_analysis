@@ -36,6 +36,7 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     Params.sprtype='float';
     Params.p=0.001;
     Params.SModType='dB';
+    assignin('base', 'Params', Params);
 
     % Load in spikeClusters and compute total num of clusters in there
     spikeTimeRipClusStruct = load(spikeClusters);
@@ -57,10 +58,11 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     if nargin<5
          numClusters = size(eval(field),1);
     end
-
+    numClusters = int8(numClusters);
+    
     % collect indices of individual clusters
     clusData = getIndividual(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
-
-    % collect indices of 2STRF clusters
-    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
+    
+    % collect indices of nSTRF pairwise clusters
+    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData);
 end

@@ -17,7 +17,7 @@
 %
 % (C) Shannon Lin, Edited Dec 2019
 
-function [clusData] = getIndividual(Params, spikeTimeRipClus,sprfile,Trig,numClusters)
+function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClusters)
     % Define STRF parameters
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
@@ -34,17 +34,17 @@ function [clusData] = getIndividual(Params, spikeTimeRipClus,sprfile,Trig,numClu
     sprtype=Params.sprtype;
     p=Params.p;
     SModType=Params.SModType;
-    
+
     % Store STRF, STRFs data of each cluster to a struct
-    for k=1:numClusters
+    for i=1:numClusters
         % Compute spike event times
-        spike = spikeTimeRipClus{k, 2};
+        spike = spikeTimeRipClus{i, 2};
         spet = spike * Fss;
         try
             [~,~,STRF1A,STRF2A,~,Wo1A,Wo2A,No1A,No2A,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
             [taxis,faxis,STRF1B,STRF2B,PP,Wo1B,Wo2B,No1B,No2B,SPLN]=rtwstrfdbint(sprfile,T1,T2,spet',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
         catch me
-            disp('Error when computing STRF1/STRF2 of cluster %d, exiting function', spikeTimeRipClus{k, 1})
+            disp('Error when computing STRF1/STRF2 of cluster %d, exiting function', spikeTimeRipClus{i, 1})
             disp(me);
             return;
         end
@@ -65,7 +65,7 @@ function [clusData] = getIndividual(Params, spikeTimeRipClus,sprfile,Trig,numClu
         STRF2sBinary = binarizeSTRFs(STRF2s);
         
         % Assign fields in struct
-        clusParam.clusterNo = spikeTimeRipClus{k, 1};
+        clusParam.clusterNo = spikeTimeRipClus{i, 1};
         clusParam.spike = spike;
         clusParam.spet = spet;
         clusParam.taxis = taxis;
@@ -88,14 +88,63 @@ function [clusData] = getIndividual(Params, spikeTimeRipClus,sprfile,Trig,numClu
         clusParam.STRF2s = STRF2s;
         clusParam.STRF2sBinary = STRF2sBinary;
         clusParam.Tresh2 = Tresh2;
-        
+
+        % Save params from strfparam
         [RFParam]=strfparam(taxis,faxis,STRF1,Wo1,PP,Sound);
         for fn = fieldnames(RFParam)'
            clusParam.(fn{1}) = RFParam.(fn{1});
         end
         
+        % Collecting indices from gstrfmodel.m
+        % Errs parameter squiggled out, gstrfmodel.m has error in code
+        % gstrfmodel.m for STRF1
+        [STRF1m,STRF1am,STRF1bm,STRF1cm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,~,alpha_d,N]=gstrfmodel(STRF1,taxis,faxis,PP,Tresh1,'nsvd','nsvd','n');
+        clusParam.STRF1m = STRF1m;
+        clusParam.STRFam = STRF1am;
+        clusParam.STRFbm = STRF1bm;
+        clusParam.STRFcm = STRF1cm;
+        clusParam.x0_1 = x0;
+        clusParam.w_1 = w;
+        clusParam.sf0_1 = sf0;
+        clusParam.spectrop_1 = spectrop;
+        clusParam.t0_1 = t0;
+        clusParam.c_1 = c;
+        clusParam.tf0_1 = tf0;
+        clusParam.q_1 = q;
+        clusParam.k_1 = k;
+        clusParam.belta_1 = belta;
+        clusParam.SIs_1 = SIs;
+        clusParam.SIt_1 = SIt;
+        clusParam.SI_1 = SI;
+        clusParam.alpha_d_1 = alpha_d;
+        clusParam.N_1 = N;
+        
+        % gstrmodel.m for STRF2
+        [STRF2m,STRF2am,STRF2bm,STRF2cm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,~,alpha_d,N]=gstrfmodel(STRF2,taxis,faxis,PP,Tresh2,'nsvd','nsvd','n');
+        clusParam.STRF2m = STRF2m;
+        clusParam.STRF2am = STRF2am;
+        clusParam.STRF2bm = STRF2bm;
+        clusParam.STRF2cm = STRF2cm;
+        clusParam.x0_2 = x0;
+        clusParam.w_2 = w;
+        clusParam.sf0_2 = sf0;
+        clusParam.spectrop_2 = spectrop;
+        clusParam.t0_2 = t0;
+        clusParam.c_2 = c;
+        clusParam.tf0_2 = tf0;
+        clusParam.q_2 = q;
+        clusParam.k_2 = k;
+        clusParam.belta_2 = belta;
+        clusParam.SIs_2 = SIs;
+        clusParam.SIt_2 = SIt;
+        clusParam.SI_2 = SI;
+        clusParam.alpha_d_2 = alpha_d;
+        clusParam.N_2 = N;
+        
         % Save in clusData
-        clusData(k, 1) = clusParam;
+        % Can't figure out how to preallocate for speed
+        % Running into issues preallocating array of empty struct
+        clusData(i, 1) = clusParam;
     end
     assignin('base', 'clusData', clusData);
 end
