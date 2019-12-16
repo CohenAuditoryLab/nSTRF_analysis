@@ -62,7 +62,6 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     
     % collect indices of individual clusters
     clusData = getIndividual(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
-    
     % collect indices of nSTRF pairwise clusters
     pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData);
 end

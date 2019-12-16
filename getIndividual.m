@@ -98,11 +98,11 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         % Collecting indices from gstrfmodel.m
         % Errs parameter squiggled out, gstrfmodel.m has error in code
         % gstrfmodel.m for STRF1
-        [STRF1m,STRF1am,STRF1bm,STRF1cm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,~,alpha_d,N]=gstrfmodel(STRF1,taxis,faxis,PP,Tresh1,'nsvd','nsvd','n');
+        [STRF1m,STRF1am,STRF1bm,STRF1cm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,~,alpha_d,~]=gstrfmodel(STRF1,taxis,faxis,PP,Tresh1,'nsvd','nsvd','n');
         clusParam.STRF1m = STRF1m;
-        clusParam.STRFam = STRF1am;
-        clusParam.STRFbm = STRF1bm;
-        clusParam.STRFcm = STRF1cm;
+        clusParam.STRF1am = STRF1am;
+        clusParam.STRF1bm = STRF1bm;
+        clusParam.STRF1cm = STRF1cm;
         clusParam.x0_1 = x0;
         clusParam.w_1 = w;
         clusParam.sf0_1 = sf0;
@@ -117,7 +117,6 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         clusParam.SIt_1 = SIt;
         clusParam.SI_1 = SI;
         clusParam.alpha_d_1 = alpha_d;
-        clusParam.N_1 = N;
         
         % gstrmodel.m for STRF2
         [STRF2m,STRF2am,STRF2bm,STRF2cm,x0,w,sf0,spectrop,t0,c,tf0,q,k,belta,SIs,SIt,SI,~,alpha_d,N]=gstrfmodel(STRF2,taxis,faxis,PP,Tresh2,'nsvd','nsvd','n');
@@ -139,7 +138,6 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         clusParam.SIt_2 = SIt;
         clusParam.SI_2 = SI;
         clusParam.alpha_d_2 = alpha_d;
-        clusParam.N_2 = N;
         
         % Save in clusData
         % Can't figure out how to preallocate for speed
