@@ -4,13 +4,13 @@ Analyze pairwise correlations between neurons in various layers. Used Cassius_19
 uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
 
 **Main 3 final files:**
+
 getIndividual.m: computes and saves various pairwise parameters
+
 getPaired.m: computes and saves various individual cluster parameters
+
 mommaScript.m: script to run the above two scripts
 
-**Contents.m**
-
-Monty's summary of files in his code base, helpful in locating particular functions.
 
 **getIndividual.m**
 
@@ -24,6 +24,9 @@ This file records pairwise analysis indices in pairedData struct.
 
 pairedData parameters include: 
 clusOne (cluster one number), ClusTwo, optimalBinSize, nSTRFOne (STRF of first cluster coincident spike time), nSTRFTwo, orSTRF, andSTRF, coin1CorrOrZeroLag, coin1CorrAndZeroLag, coin2CorrOrZeroLag, coin2CorrAndZeroLag, coin1CorrCoin2ZeroLag, montyCoin1CorrCoin2ZeroLag (xcorr between coincident first spike and coincident second spike using Monty's calculations), MontyRSTRF (delay axis (msec, octave Frequency axis (Octaves), optimal temporal delay that maximizes correlation fxn (msec), optimal frequency shift that maximizes correlation fxn (Oct), spectrotemporal SI (at optimal delay & frequency shift), spectrotemporal SI at zero delay and zero frequency shift, temporal SI (maximum SI at zero spectral, shift & variable temporal delay, spectral SI (maximum SI at zero delay and variable spectral shift)), T, R, Rcc, RR (last four from Monty's ShuffleXCorr.m)
+
+------------------------------------------------------------------------------------------------------------------------------
+
 
 **pairedSTRFanalysis.m:**
 
@@ -47,4 +50,8 @@ significant, 0 else. Significance is determined as any pixel greater than thresh
 **Monty's code**
 
 rtwstrfdbint.m, strfcorrcorrected.m	, strfparam.m, wstrfstat.m, xcorrspike.m
+
+**gstrfmodel.m**
+
+Fixed some errors in this script
 
