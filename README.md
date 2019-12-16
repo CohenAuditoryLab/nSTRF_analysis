@@ -55,8 +55,9 @@ significant, 0 else. Significance is determined as any pixel greater than thresh
 
 **gstrfmodel.m**
 
-Fixed some errors in this script
+Fixed some errors in this script, used to record various indices
 
 **All other .m files**
+
 Monty's code/database of code from matlab/keck
 
