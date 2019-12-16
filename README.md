@@ -47,11 +47,11 @@ This file computes optimal bin size to use when recording coincident spike times
 This file computes the siginificant STRF using Monty's wstrfstat.m and then converts the outputted STRFs to 0/1 where 1 is 
 significant, 0 else. Significance is determined as any pixel greater than threshold, which I defined as 0.05/total number of pixels. The result of this file was used to calculate OR/AND STRF between two STRFs using logical or/and between respective pixels.
 
-**Monty's code**
-
-rtwstrfdbint.m, strfcorrcorrected.m	, strfparam.m, wstrfstat.m, xcorrspike.m
 
 **gstrfmodel.m**
 
 Fixed some errors in this script
+
+**All other .m files**
+Monty's code/database of code from matlab/keck
 
