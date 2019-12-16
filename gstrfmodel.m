@@ -273,7 +273,7 @@ if N>=2
  
         	%the best temporal and spectral modulation frequency
         	[Fm,RD,RTF]=strf2rtf(taxis,faxis,STRFc,300,4,'n');
-            % Shannon modified this line, too many output args
+            % Shannon modified this line, too many output args error
             % [BestFm,BestRD]=rtfparam(Fm,RD,RTF,0.5,'n');
             TFParam=rtfparam(Fm,RD,RTF,0.5,'n');
             BestFm = TFParam.BestFm;

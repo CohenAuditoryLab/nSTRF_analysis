@@ -4,20 +4,31 @@
 load('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat')
 load('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat')
 
-%Batch to compute xcorr between recording locations
-%Need to add shuffling procedure 
-Fs= 24414.0625  %Original sampling rate - ideally use the sampling rate for your data - but the way its done here it wont matter
-Fsd=250         % The desired sampling rate for correlation analysis - the spike train is resampled at Fsd prior to computing the correlation
+% Defining parameters
+Fs= 24414.0625;  %Original sampling rate - ideally use the sampling rate for your data - but the way its done here it wont matter
+Fsd=250;      % The desired sampling rate for correlation analysis - the spike train is resampled at Fsd prior to computing the correlation
                 % you can change to 250 for 4 ms resolution
-MaxTau=.50      %Correlation lag - up to 250 ms
-T=300           %Experiment duration - Im assuming this is the correct value
-Zero='n'        % Do not remove correlation value at zero lag - only useful for autocorrelograms
-Mean='n'        %Do not remove mean correaltion value - DC
-Disp='y'
+MaxTau=.15;     %Correlation lag - up to 250 ms, should be =T2 per email
+Zero='n';      % Do not remove correlation value at zero lag - only useful for autocorrelograms
+Mean='n';        %Do not remove mean correlation value - DC
+SpecFile='DNR_Cortex_96k5min_4_50.spr';
+T1=0;
+T2=.15; % T2=0.25, maxdelay 100; T2=0.15, maxdelay 50
+MaxDelay = 50;
+Fss=Fs;
+SPL=80;
+MdB=30;
+ModType='dB';
+SModType='dB';
+Sound='MR';
+NBlocks=400;
+sprtype='float';
+p=0.001;
+
 
 %Finding spike times for different trials
-K=1 %Select first cluster
-L=2 %Select second cluster
+K=1; %Select first cluster
+L=2; %Select second cluster
 spet1=round(cell2mat(st_clu(K,2))*Fs)';             %Spike even time vector for first unit (in sample number not real time)
 spet2=round(cell2mat(st_clu(L,2))*Fs)';             %Spike event time vector for second unit
 [spet1A,spet1B]=spet2spetab(spet1,TrigA,TrigB,Fs);
@@ -51,50 +62,25 @@ R12s=(R1A2As+R1B2Bs)/2;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% COMPUTING STRFS %%%%%%%%%%%%%%%%%%%%%%
-
-%Generating Receptive Fields
-SpecFile='DNR_Cortex_96k5min_4_50.spr'
-T1=0;
-T2=.25; % changing to 0.15 gives me trouble, need it for getPaired.m tho
-Fss=Fs
-SPL=70
-MdB=30
-ModType='dB'
-SModType='dB'
-Sound='MR';
-NBlocks=400
-sprtype='float';
-p=0.001
-
-% T1=0;
-% T2=0.15;
-% Fss=24414.0625;
-% SPL=80;
-% MdB=30;
-% ModType='dB';
-% SModType='dB';
-% Sound='MR';
-% NBlocks=100;
-% sprtype='float';
-% p=0.05;
-
+UF=10;
 %Computing STRF for first cluster
-[taxis,faxis,STRF1A,SSS,PP,Wo1A,Wo2,No1A,No2,SPLN]=rtwstrfdb(SpecFile,T1,T2,spet1,TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,sprtype);
-[taxis,faxis,STRF1B,SSS,PP,Wo1B,Wo2,No1B,No2,SPLN]=rtwstrfdb(SpecFile,T1,T2,spet1,TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,sprtype);
+[taxis,faxis,STRF1A,SSS,PP,Wo1A,Wo2,No1A,No2,SPLN]=rtwstrfdbint(SpecFile,T1,T2,spet1,TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+[taxis,faxis,STRF1B,SSS,PP,Wo1B,Wo2,No1B,No2,SPLN]=rtwstrfdbint(SpecFile,T1,T2,spet1,TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
 STRF1=(STRF1A+STRF1B)/2;
 [STRF1s,Tresh]=wstrfstat(STRF1,p,No1A+No1B,(Wo1A+Wo1B)/2,PP,MdB,ModType,Sound,SModType);
 
 %Computing STRF for second cluster
-[taxis,faxis,STRF2A,SSS,PP,Wo2A,Wo2,No2A,No2,SPLN]=rtwstrfdb(SpecFile,T1,T2,spet2,TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,sprtype);
-[taxis,faxis,STRF2B,SSS,PP,Wo2B,Wo2,No2B,No2,SPLN]=rtwstrfdb(SpecFile,T1,T2,spet2,TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,sprtype);
+[taxis,faxis,STRF2A,SSS,PP,Wo2A,Wo2,No2A,No2,SPLN]=rtwstrfdbint(SpecFile,T1,T2,spet2,TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
+[taxis,faxis,STRF2B,SSS,PP,Wo2B,Wo2,No2B,No2,SPLN]=rtwstrfdbint(SpecFile,T1,T2,spet2,TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
 STRF1=(STRF2A+STRF2B)/2;
 [STRF2s,Tresh]=wstrfstat(STRF1,p,No2A+No2B,(Wo2A+Wo2B)/2,PP,MdB,ModType,Sound,SModType);
 
-% STRF1s = pairedData.nSTRFOne.STRFs;
-% STRF2s = pairedData.nSTRFTwo.STRFs;
-%Predict Correlation From the STRFs - Chen 2012
+% Predict Correlation From the STRFs - Chen 2012
 [T,R,Rcc,RR]=strf2xcorr(taxis,faxis,STRF1s,STRF2s,PP,'y');
-
+assignin('base', 'T', T);
+assignin('base', 'R', R);
+assignin('base', 'Rcc', Rcc);
+assignin('base', 'RR', RR);
 
 %%%%%%%%%%%%%%% PLOTTING RESULTS %%%%%%%%%%%%%%%%
 
@@ -118,7 +104,7 @@ ylabel('Freq. (Oct)')
 title(['STRF clust ' num2str(cell2mat(st_clu(L,1)))])
 
 %Receptive field covariance
-[RSTRF] = strfcorr(STRF1s,STRF2s,taxis,faxis,PP,100,4);
+[RSTRF] = strfcorr(STRF1s,STRF2s,taxis,faxis,PP,MaxDelay,4);
 subplot(335)
 Max=max(max(abs(RR)));
 imagesc(T*1000,log2(faxis/faxis(1)),RR),caxis([-Max Max])

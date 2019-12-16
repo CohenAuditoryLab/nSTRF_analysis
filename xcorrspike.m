@@ -73,17 +73,14 @@ if strcmp(Mean,'y')
     R=R-M1*M2;
 end
 
+% Shannon added this stuff below to calculate at what time peak occurs
+timeIntervals = (-MaxLag:MaxLag)/Fsd;
+[~, peakIndex] = max(R);
+optimalBinSize = abs(timeIntervals(1, peakIndex));
+    
 %Plotting X-Correlation
 if strcmp(Disp,'y')
-    % Shannon added this stuff below to calculate at what time peak occurs
-    timeIntervals = (-MaxLag:MaxLag)/Fsd;
 	plot(timeIntervals,R)
-    [~, peakIndex] = max(R);
-    optimalBinSize = abs(timeIntervals(1, peakIndex));
-%     assignin('base', 'peakIndex', peakIndex);
-%     assignin('base', 'timeIntervals', timeIntervals);
-%     assignin('base', 'R', R);
-%     assignin('base', 'optimalBinSize', optimalBinSize);
 	ylabel('R( T )');
 	xlabel('Time Lag - T ( sec )')
 	pause(0)

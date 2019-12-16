@@ -67,7 +67,8 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                 struct2 = clusData(j, 1);
                 
                 % Find optimal bin size to calculate coincident spike times
-                optimalBinSize = findBin(Fss, struct1.spet, struct2.spet);
+                [R, optimalBinSize] = findBin(Fss, struct1.spet, struct2.spet);
+                pairData.R = R;
                 pairData.optimalBinSize = optimalBinSize;
                 
                 % Find coincident spike times for spike1 and spike2
@@ -196,8 +197,8 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                 clusTwoSTRF1A = clusData(index2).STRF1A;
                 clusTwoSTRF1B = clusData(index2).STRF1B;
                 RSTRF = strfcorrcorrected(clusOneSTRF1A,clusOneSTRF1B,clusOneSTRF1s,clusTwoSTRF1A,clusTwoSTRF1B,clusTwoSTRF1s,n2Taxis,n2Faxis,n2PP);
-                montyR = RSTRF.R;
-                montyCoin1CorrCoin2ZeroLag = montyR(zeroLagRowIndex, zeroLagColIndex);
+                montyRmatrix = RSTRF.R;
+                montyCoin1CorrCoin2ZeroLag = montyRmatrix(zeroLagRowIndex, zeroLagColIndex);
                 pairData.montyCoin1CorrCoin2ZeroLag = montyCoin1CorrCoin2ZeroLag;
                 pairData.MontyRSTRF = RSTRF;
 
@@ -208,7 +209,7 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                 faxis = pairData.nSTRFTwo.faxis;
                 PP = pairData.nSTRFTwo.PP;
                 % Predict Correlation From the STRFs - Chen 2012
-                [T,R,Rcc,RR]=strf2xcorr(taxis,faxis,STRF1s,STRF2s,PP,'y');
+                [T,R,Rcc,RR]=strf2xcorr(taxis,faxis,STRF1s,STRF2s,PP,'n');
                 pairData.T = T;
                 pairData.R = R;
                 pairData.Rcc = Rcc;
