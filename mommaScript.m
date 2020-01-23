@@ -21,7 +21,7 @@
 % (C) Shannon Lin, Edited Dec 2019
 
 % Note to self, run as follows:
-% mommaScript('/Users/shannon1/Documents/F19/neuroResearch/nSTRF/spike_times_ripple_clust_new.mat', '/Users/shannon1/Documents/F19/neuroResearch/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/F19/neuroResearch/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu', 2)
+% mommaScript('/Users/shannon1/Documents/Research/Cohen/nSTRF/spike_times_ripple_clust_new.mat', '/Users/shannon1/Documents/Research/Cohen/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/Research/Cohen/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu', 2)
 function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version,numClusters)
     % Defining STRF params
     Params.T1=0;
@@ -63,5 +63,5 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     % collect indices of individual clusters
     clusData = getIndividual(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
     % collect indices of nSTRF pairwise clusters
-    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData);
+    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData,'n');
 end

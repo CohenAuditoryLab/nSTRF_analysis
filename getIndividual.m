@@ -6,7 +6,9 @@
 %       
 %
 % INPUT PARAMS
-%   Params           : specified params to compute STRF
+%   Params           : struct of STRF params, must include
+%                           T1,T2,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,
+%                           sprtype,p,SModType
 %   spikeTimeRipClus : struct containing spike times
 %   sprfile          : full path to spectral profile file
 %   Trig             : full path to trigger data
@@ -18,10 +20,18 @@
 % (C) Shannon Lin, Edited Dec 2019
 
 function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClusters)
-    % Define STRF parameters
+    % Retrieve trig
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;
+    % Define STRF parameters
+    if (~isfield(Params,'T1') || ~isfield(Params,'T2') || ~isfield(Params,'Fss') || ~isfield(Params,'SPL') ...
+        || ~isfield(Params,'MdB') || ~isfield(Params,'ModType') || ~isfield(Params,'Sound') || ...
+        ~isfield(Params,'NBlocks') || ~isfield(Params,'UF') || ~isfield(Params,'sprtype') || ...
+        ~isfield(Params,'p') || ~isfield(Params,'SModType'))
+        disp('Check specifications above for necessary Params needed to calculate STRF, exiting func')
+        return; 
+    end
     T1=Params.T1;
     T2=Params.T2;
     Fss=Params.Fss;
@@ -141,7 +151,6 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         
         % Save in clusData
         % Can't figure out how to preallocate for speed
-        % Running into issues preallocating array of empty struct
         clusData(i, 1) = clusParam;
     end
     assignin('base', 'clusData', clusData);

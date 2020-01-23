@@ -1,4 +1,4 @@
-% function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters)
+% function [pairedData] = getPaired(Params,spikeTimeRipClus,sprfile,Trig,numClusters)
 %
 %   FILE NAME   : getPaired.m
 %   DESCRIPTION : This file saves pairwise analysis data to a 
@@ -6,7 +6,9 @@
 %       
 %
 % INPUT PARAMS
-%   Params           : specified params to compute STRF
+%   Params           : struct of STRF params, must include
+%                           T1,T2,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,
+%                           sprtype,p,SModType
 %   spikeTimeRipClus : struct containing spike times
 %   sprfile          : full path to spectral profile file
 %   Trig             : full path to trigger data
@@ -17,14 +19,21 @@
 %   pairedData          : contains nSTRF indices data
 %       
 %
-% (C) Shannon Lin, Edited Dec 2019
+% (C) Shannon Lin, Edited Jan 2020
 
-function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClusters,clusData)
+function [pairedData] = getPaired(Params,spikeTimeRipClus,sprfile,Trig,numClusters,clusData,plot)
+    % Retrieve trig
     trigStruct = load(Trig);
     TrigA = trigStruct.TrigA;
     TrigB = trigStruct.TrigB;
-    
-    % loading params from input
+    % Define STRF parameters
+    if (~isfield(Params,'T1') || ~isfield(Params,'T2') || ~isfield(Params,'Fss') || ~isfield(Params,'SPL') ...
+        || ~isfield(Params,'MdB') || ~isfield(Params,'ModType') || ~isfield(Params,'Sound') || ...
+        ~isfield(Params,'NBlocks') || ~isfield(Params,'UF') || ~isfield(Params,'sprtype') || ...
+        ~isfield(Params,'p') || ~isfield(Params,'SModType'))
+        disp('Check specifications above for necessary Params needed to calculate STRF, exiting func')
+        return; 
+    end
     T1=Params.T1;
     T2=Params.T2;
     Fss=Params.Fss;
@@ -38,7 +47,8 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
     p=Params.p;
     SModType=Params.SModType;
     
-    entered = 0;
+    % Record number of iterations to save parameters in successive
+    % indices within pairedData struct
     numIter = 1;
     for i=1:numClusters
         for j=1:numClusters
@@ -47,7 +57,7 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
             else
                 clusNo1 = spikeTimeRipClus{i, 1};
                 clusNo2 = spikeTimeRipClus{j, 1};
-                if (entered == 1)
+                if (i~=1 && j~=1)
                     % skip if pair already analyzed
                     allClusOnes = [pairedData.clusOne];
                     allClusTwos = [pairedData.clusTwo];
@@ -59,7 +69,6 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                         end
                     end
                 end
-                entered = 1;
                 pairData.clusOne = clusNo1;
                 pairData.clusTwo = clusNo2;
                 % Retrieve STRF params from clusData struct
@@ -152,8 +161,8 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
 
                 clusOneSTRF1s = struct1.STRF1sBinary;
                 clusTwoSTRF1s = struct2.STRF1sBinary;
-%                 clusOneSTRF1s = clusData(index1).STRF1sBinary;
-%                 clusTwoSTRF1s = clusData(index2).STRF1sBinary;
+                % clusOneSTRF1s = clusData(index1).STRF1sBinary;
+                % clusTwoSTRF1s = clusData(index2).STRF1sBinary;
                 % Can perform same analysis on 2nd STRF
                 % % clusOneSTRF2s = clusData(index1).STRF2sBinary;
                 % % clusTwoSTRF2s = clusData(index2).STRF2sBinary;
@@ -216,94 +225,96 @@ function [pairedData] = getPaired(Params, spikeTimeRipClus,sprfile,Trig,numClust
                 pairData.RR = RR;
                 
                 % plot STRF, STRFs, coinSTRF, coinSTRFs
-                rows = 6;
-                cols = 2;
-                num = 1;
-                figure();
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),struct1.STRF1);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct1.clusterNo) ' STRF']);
+                if (plot == 'y')
+                    rows = 6;
+                    cols = 2;
+                    num = 1;
+                    figure();
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),struct1.STRF1);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct1.clusterNo) ' STRF']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct2.taxis,log2(struct2.faxis/struct2.faxis(1)),struct2.STRF1);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct2.clusterNo) ' STRF']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct2.taxis,log2(struct2.faxis/struct2.faxis(1)),struct2.STRF1);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct2.clusterNo) ' STRF']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct1.clusterNo) ' coinSTRF']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(n1Taxis,log2(n1Faxis/n1Faxis(1)),coin1STRF);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct1.clusterNo) ' coinSTRF']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct2.clusterNo) ' coinSTRF']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(n2Taxis,log2(n2Faxis/n2Faxis(1)),coin2STRF);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct2.clusterNo) ' coinSTRF']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),clusOneSTRF1s);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct1.clusterNo) ' STRFs']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),clusOneSTRF1s);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct1.clusterNo) ' STRFs']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct2.taxis,log2(struct2.faxis/struct2.faxis(1)),clusTwoSTRF1s);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct2.clusterNo) ' STRFs']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct2.taxis,log2(struct2.faxis/struct2.faxis(1)),clusTwoSTRF1s);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct2.clusterNo) ' STRFs']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct1.taxis,log2(n1Faxis/n1Faxis(1)),coin1STRFs);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct1.clusterNo) ' coinSTRFs']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct1.taxis,log2(n1Faxis/n1Faxis(1)),coin1STRFs);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct1.clusterNo) ' coinSTRFs']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct2.taxis,log2(n2Faxis/n2Faxis(1)),coin2STRFs);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title(['#' int2str(struct2.clusterNo) ' coinSTRFs']);
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct2.taxis,log2(n2Faxis/n2Faxis(1)),coin2STRFs);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title(['#' int2str(struct2.clusterNo) ' coinSTRFs']);
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),orSTRF);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title('orSTRF');
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),orSTRF);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title('orSTRF');
 
-                subplot(rows,cols,num)
-                num = num + 1;
-                pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),andSTRF);
-                colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
-                title('andSTRF');
-    
-                % Plot various indices
-                xAxis = 0.1;
-                yAxis = 1;
-                offsetY = -0.3;
-                offsetX = 1.3;
-                corrOr1 = subplot(rows, cols, num);
-                text(xAxis, yAxis,['coin' int2str(struct1.clusterNo) 'CorrOrZeroLag: ' num2str(coin1CorrOrZeroLag)]);
-                yAxis = yAxis + offsetY;
-                set (corrOr1, 'visible', 'off')
+                    subplot(rows,cols,num)
+                    num = num + 1;
+                    pcolor(struct1.taxis,log2(struct1.faxis/struct1.faxis(1)),andSTRF);
+                    colormap jet;set(gca,'YDir','normal'); shading flat;colormap jet;
+                    title('andSTRF');
 
-                corrAnd1 = subplot(rows, cols, num);
-                text(xAxis, yAxis,['coin' int2str(struct1.clusterNo) 'CorrAndZeroLag: ' num2str(coin1CorrAndZeroLag)]);
-                yAxis = yAxis - offsetY;
-                xAxis = xAxis + offsetX;
-                set (corrAnd1, 'visible', 'off')
+                    % Plot various indices
+                    xAxis = 0.1;
+                    yAxis = 1;
+                    offsetY = -0.3;
+                    offsetX = 1.3;
+                    corrOr1 = subplot(rows, cols, num);
+                    text(xAxis, yAxis,['coin' int2str(struct1.clusterNo) 'CorrOrZeroLag: ' num2str(coin1CorrOrZeroLag)]);
+                    yAxis = yAxis + offsetY;
+                    set (corrOr1, 'visible', 'off')
 
-                corrOr2 = subplot(rows, cols, num);
-                text(xAxis, yAxis,['coin' int2str(struct2.clusterNo) 'CorrOrZeroLag: ' num2str(coin2CorrOrZeroLag)]);
-                yAxis = yAxis + offsetY;
-                set (corrOr2, 'visible', 'off')
+                    corrAnd1 = subplot(rows, cols, num);
+                    text(xAxis, yAxis,['coin' int2str(struct1.clusterNo) 'CorrAndZeroLag: ' num2str(coin1CorrAndZeroLag)]);
+                    yAxis = yAxis - offsetY;
+                    xAxis = xAxis + offsetX;
+                    set (corrAnd1, 'visible', 'off')
 
-                corrAnd2 = subplot(rows, cols, num);
-                text(xAxis, yAxis,['coin' int2str(struct2.clusterNo) 'CorrAndZeroLag: ' num2str(coin2CorrAndZeroLag)]);
-                set (corrAnd2, 'visible', 'off')
+                    corrOr2 = subplot(rows, cols, num);
+                    text(xAxis, yAxis,['coin' int2str(struct2.clusterNo) 'CorrOrZeroLag: ' num2str(coin2CorrOrZeroLag)]);
+                    yAxis = yAxis + offsetY;
+                    set (corrOr2, 'visible', 'off')
+
+                    corrAnd2 = subplot(rows, cols, num);
+                    text(xAxis, yAxis,['coin' int2str(struct2.clusterNo) 'CorrAndZeroLag: ' num2str(coin2CorrAndZeroLag)]);
+                    set (corrAnd2, 'visible', 'off')
+                end
     
                 % Save data to pairedData struct
                 pairedData(numIter, 1) = pairData;
