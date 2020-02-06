@@ -44,6 +44,12 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
     sprtype=Params.sprtype;
     p=Params.p;
     SModType=Params.SModType;
+    assignin('base', 'MdB', MdB);
+    assignin('base', 'ModType', SModType);
+    assignin('base', 'p', p);
+    assignin('base', 'SModType', SModType);
+    assignin('base', 'Sound', Sound);
+    
 
     % Store STRF, STRFs data of each cluster to a struct
     for i=1:numClusters
@@ -53,6 +59,10 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         try
             [~,~,STRF1A,STRF2A,~,Wo1A,Wo2A,No1A,No2A,~]=rtwstrfdbint(sprfile,T1,T2,spet',TrigA,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype);
             [taxis,faxis,STRF1B,STRF2B,PP,Wo1B,Wo2B,No1B,No2B,SPLN]=rtwstrfdbint(sprfile,T1,T2,spet',TrigB,Fss,SPL,MdB,ModType,Sound,NBlocks,UF,sprtype); 
+            assignin('base', 'faxis', faxis);
+            assignin('base', 'PP', PP);
+            assignin('base', 'SPLN', SPLN);
+            assignin('base', 'taxis', taxis);
         catch me
             disp('Error when computing STRF1/STRF2 of cluster %d, exiting function', spikeTimeRipClus{i, 1})
             disp(me);
@@ -66,10 +76,18 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         STRF2 = (STRF2A+STRF2B)/2;
         No2 = No2A + No2B;
         Wo2 = (Wo2A + Wo2B)/2;
+        assignin('base', 'No1', No1);
+        assignin('base', 'No2', No2);
+        assignin('base', 'STRF1', STRF1);
+        assignin('base', 'STRF2', STRF2);
+        assignin('base', 'Wo1', Wo1);
+        assignin('base', 'Wo2', Wo2);
         
         % Compute significant STRF
         [STRF1s,Tresh1]=wstrfstat(STRF1,p,No1,Wo1,PP,MdB,ModType,Sound,SModType);
         [STRF2s,Tresh2]=wstrfstat(STRF2,p,No2,Wo2,PP,MdB,ModType,Sound,SModType);
+        assignin('base', 'STRF1s', STRF1s);
+        assignin('base', 'STRF2s', STRF2s);
         % Convert to 0/1s
         STRF1sBinary = binarizeSTRFs(STRF1s);
         STRF2sBinary = binarizeSTRFs(STRF2s);
@@ -100,7 +118,10 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         clusParam.Tresh2 = Tresh2;
 
         % Save params from strfparam
-        [RFParam]=strfparam(taxis,faxis,STRF1,Wo1,PP,Sound);
+        MaxFm=500;
+        MaxRD=4;
+        [RFParam]=strfparam(taxis,faxis,STRF1,Wo1,PP,Sound,MaxFm,MaxRD);
+        % [RFParam]=strfparam(taxis,faxis,STRF1,Wo1,PP,Sound);
         for fn = fieldnames(RFParam)'
            clusParam.(fn{1}) = RFParam.(fn{1});
         end
@@ -148,6 +169,37 @@ function [clusData] = getIndividual(Params,spikeTimeRipClus,sprfile,Trig,numClus
         clusParam.SIt_2 = SIt;
         clusParam.SI_2 = SI;
         clusParam.alpha_d_2 = alpha_d;
+%         
+%         %strfgaborfit.m
+%         N=20;
+%         theta=5;
+%         [GModel]=strfgaborfit(STRF1s,STRF1,taxis,faxis,N,theta);
+%         for fn = fieldnames(GModel)'
+%            clusParam.(fn{1}) = GModel.(fn{1});
+%         end
+%         
+%         %Plot the model data
+%         Max=max(max(abs(STRF1)))*sqrt(PP);
+%         subplot(221)
+%         imagesc(1000*taxis,log2(faxis/faxis(1)),STRF1*sqrt(PP))
+%         caxis([-Max Max])
+%         set(gca,'YDir','normal')
+%         title('Original STRF')
+%         subplot(222)
+%         imagesc(1000*taxis,log2(faxis/faxis(1)),GModel.STRFm2*sqrt(PP)), %Plot second order model for this case since it improves the fit quite a bit
+%         caxis([-Max Max])
+%         title('Gabor Model')
+%         subplot(223)
+%         imagesc(1000*taxis,log2(faxis/faxis(1)),(GModel.STRFm2-STRF1)*sqrt(PP)), %Plot Residuals
+%         caxis([-Max Max])
+%         title('Error Residuals')
+% 
+% 
+% %         %This routine converts the STRF into a ripple transfer function (RTF) which
+% %         %we can then plot - you can use the ?y? option to plot it
+% %         [Fm,RD,RTF,RTFVar]=strf2rtf(taxis,faxis,STRF1s,MaxFm,MaxRD,'y');
+% %         xlabel('Temporal Mod (Hz)')
+% %         ylabel('Spectral Mod (cycles/oct)')
         
         % Save in clusData
         % Can't figure out how to preallocate for speed
