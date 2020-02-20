@@ -5,21 +5,21 @@ uploaded to PennBox by Jaejin (also contains sprfile, trig files, etc).
 
 **Main 3 final files:**
 
-getIndividual.m: computes and saves various pairwise parameters
+individualSTRFParams.m: computes and saves various individual cluster parameters
 
-getPaired.m: computes and saves various individual cluster parameters
+pairedSTRFParams.m: computes and saves various pairwise parameters
 
 mommaScript.m: script to run the above two scripts
 
 
-**getIndividual.m**
+**individualSTRFParams.m**
 
 This file records individual cluster parameters in struct clusData. Can be easily modified to hold more parameters if of interest.
 
 clusData parameters include: 
 cluster number, spike train, spike event time, STRF1A, STRF1B, STRF1, STRF1s, STRF1sBinary, and all parameters from Monty's strfparam including delay, duration, best frequency (in octaves and Hz), spectral bandwidth (octaves and Hz), delay at STRF peak, best frequency at peak, delay measurement at peak of temporal envelope, best frequency at peak of spectral envelope, various envelope duration measurements, best modulation rate, best ripple density, best temporal modulation frequency, best spectral modulation freq, temporal modulation freq centroid, spectral modulation freq centroid, spectral MTF bandwidth, temporal MTF bandwidth, temporal modulation freq upper/lower cutoff, spectral modulation freq upper/lower cutoff, direction selectivity index, peak response from ripple density plot, temporal envelope, spectral envelope, phase locking index, inhibitory:excitatory ratio, gstrf parameters (fitted STRF, fitted STRF coming from the first component, fitted STRF coming from the second component, fitted STRF coming from the third component, center frequency, bandwidth of the spectral evenlope, best ripple density, spectral phase, peak latency, response duration, best modulation frequency, skewness of temporal evenlope, absolute peak value of STRFm, similarity index between fitted and measured spectral profiles, similarity index between fitted and measured temporal profiles, similarity index between STRFm and STRFs, error between STRF and STRFm, separability index.
 
-**getPaired.m**
+**pairedSTRFParams.m**
 
 This file records pairwise analysis indices in pairedData struct.
 
