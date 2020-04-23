@@ -12,16 +12,17 @@
 %                       spikeClusters (Cassius_190326 is "st_clu",
 %                       Cassius_190324 is "spikeTimeRip")
 %   numClusters   : optional argument, can specify number of clusters 
-%                       to analyze, default is analyze all clusters in .mat
+%                       to analyze
+%                   default analyzes all clusters in spikeClusters.mat
 %
 % RETURNED VARIABLES
 %   clusData          : contains individual cluster indices data
 %   pairedData        : contains nSTRF indices data
 %
-% (C) Shannon Lin, Edited Dec 2019
+% (C) Shannon Lin, Edited April 2020
 
 % Note to self, run as follows:
-% mommaScript('/Users/shannon1/Documents/Research/Cohen/nSTRF/spike_times_ripple_clust_new.mat', '/Users/shannon1/Documents/Research/Cohen/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/Research/Cohen/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu', 2)
+% mommaScript('/Users/shannon1/Documents/Research/Jaejin/nSTRF/spike_times_ripple_clust_new.mat', '/Users/shannon1/Documents/Research/Jaejin/nSTRF/DNR_Cortex_96k5min_4_50.spr','/Users/shannon1/Documents/Research/Jaejin/nSTRF/AudiResp_16_24-190326-154559_triggers.mat', 'st_clu', 2)
 function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version,numClusters)
     % Defining STRF params
     Params.T1=0;
@@ -36,7 +37,6 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     Params.sprtype='float';
     Params.p=0.001;
     Params.SModType='dB';
-    assignin('base', 'Params', Params);
 
     % Load in spikeClusters and compute total num of clusters in there
     spikeTimeRipClusStruct = load(spikeClusters);
@@ -60,8 +60,8 @@ function [clusData, pairedData] = mommaScript(spikeClusters,sprfile,Trig,version
     end
     numClusters = int8(numClusters);
     
-    % collect indices of individual clusters
-    clusData = getIndividual(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
-    % collect indices of nSTRF pairwise clusters
-    pairedData = getPaired(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData,'n');
+    % collect individual cluster parameters
+    clusData = individualSTRFParams(Params, spikeTimeRipClus, sprfile, Trig, numClusters);
+    % collect pairwise cluster parameters
+    pairedData = pairedSTRFParams(Params, spikeTimeRipClus, sprfile, Trig, numClusters, clusData,'n');
 end
